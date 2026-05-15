@@ -1,11 +1,4 @@
-import {
-  nxAffected,
-  nxGraph,
-  nxProjects,
-  nxReleaseTags,
-  nxReport,
-  nxRun,
-} from '../actions';
+import { nxAffected, nxGraph, nxProjects, nxReport, nxRun } from '../actions';
 import type { Command } from './types';
 
 const WORKSPACE_SCOPE = ['workspace-root', 'app', 'lib', 'workspace-inner'] as const;
@@ -46,15 +39,6 @@ export const nxCommands: Command[] = [
     scope: [...WORKSPACE_SCOPE],
     category: 'nx',
     action: nxReport,
-  },
-  {
-    id: 'nx.releases',
-    label: '🏷  Release tags',
-    icon: '🏷',
-    description: 'Последние git-теги релизов (v*)',
-    scope: [...WORKSPACE_SCOPE],
-    category: 'nx',
-    action: nxReleaseTags,
   },
   {
     id: 'nx.run',

@@ -4,6 +4,7 @@ import { devCommands } from './dev';
 import { gitCommands } from './git';
 import { buildNavigationCommands } from './navigation';
 import { nxCommands } from './nx';
+import { releaseCommands } from './release';
 import { type Category, type Command, matchesScope } from './types';
 import { workspaceCommands } from './workspace';
 
@@ -15,6 +16,7 @@ export const staticCommands: Command[] = [
   ...devCommands,
   ...workspaceCommands,
   ...gitCommands,
+  ...releaseCommands,
   ...nxCommands,
 ];
 
@@ -29,8 +31,9 @@ export const CATEGORY_META: Record<Category, { icon: string; label: string; orde
   dev: { icon: '🚀', label: 'Dev', order: 2 },
   workspace: { icon: 'ℹ️', label: 'Workspace', order: 3 },
   git: { icon: '🌿', label: 'Git', order: 4 },
-  nx: { icon: '🔀', label: 'Nx', order: 5 },
-  navigation: { icon: '📂', label: 'Navigate', order: 6 },
+  release: { icon: '📦', label: 'Release', order: 5 },
+  nx: { icon: '🔀', label: 'Nx', order: 6 },
+  navigation: { icon: '📂', label: 'Navigate', order: 7 },
 };
 
 export const groupByCategory = (cmds: Command[]): Map<Category, Command[]> => {

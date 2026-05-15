@@ -1,7 +1,7 @@
 import type { CliContext, CtxType } from '../context';
 
 export type Scope = CtxType | '*';
-export type Category = 'create' | 'dev' | 'nx' | 'git' | 'workspace' | 'navigation';
+export type Category = 'create' | 'dev' | 'nx' | 'git' | 'release' | 'workspace' | 'navigation';
 
 export interface CommandPromptInput {
   type: 'input';
