@@ -1,3 +1,23 @@
+## 0.1.0 (2026-05-16)
+
+### 🚀 Features
+
+- **release:** npm/nexus/url switch with auth env ([b8d5737](https://github.com/egor6-66/capsule/commit/b8d5737))
+- **cli:** add icons ([e782234](https://github.com/egor6-66/capsule/commit/e782234))
+- add themes ([f2c75b5](https://github.com/egor6-66/capsule/commit/f2c75b5))
+- **cli:** add int ([77fc9a7](https://github.com/egor6-66/capsule/commit/77fc9a7))
+- **cli:** new style ([1a6e815](https://github.com/egor6-66/capsule/commit/1a6e815))
+- **cli:** add sync-main, pr, clean-merged + git workflow doc ([a558371](https://github.com/egor6-66/capsule/commit/a558371))
+- **cli:** add release wizard (plan/run/tags) ([bb946d4](https://github.com/egor6-66/capsule/commit/bb946d4))
+
+### 🩹 Fixes
+
+- **release:** isolate local dev releases from git and worktree ([de2a251](https://github.com/egor6-66/capsule/commit/de2a251))
+
+### ❤️ Thank You
+
+- EgorRaybul
+
 ## 0.0.64 (2026-05-14)
 
 This was a version bump only for @capsuletech/cli to align it with other projects, there were no code changes.
