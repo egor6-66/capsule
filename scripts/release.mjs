@@ -154,15 +154,22 @@ const setupAuth = () => {
   return { cleanup };
 };
 
-// Build (две фазы: shared-vite сначала, остальное потом).
+// Build phases:
+//   1. shared-vite + транзитивные deps (compliance). pnpm "...<pkg>..." собирает
+//      пакет вместе со всеми его dependencies в правильном порядке. На свежем CI
+//      без существующего dist/ это критично: shared-vite в vite.config бандлит
+//      shared-compliance, для чего esbuild-у нужен resolve compliance/main → dist.
+//   2. Остальные shared-* + web-* + cli — используют готовый shared-vite/dist
+//      через libConfig.
 const phases = [
-  { name: 'shared-vite', filters: ['--filter', '@capsule/shared-vite'] },
+  { name: 'shared-vite (+ deps)', filters: ['--filter', '@capsule/shared-vite...'] },
   {
     name: 'shared-* (rest) + web-* + cli',
     filters: [
       '--filter', '@capsule/shared-*',
       '--filter', '!@capsule/shared-biome',
       '--filter', '!@capsule/shared-vite',
+      '--filter', '!@capsule/shared-compliance',
       '--filter', '@capsule/web-*',
       '--filter', '@capsule/cli',
     ],

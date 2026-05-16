@@ -151,12 +151,15 @@ const run = (cmd, opts = {}) => {
 };
 
 if (SHOULD_BUILD) {
+  // shared-vite сначала со ВСЕМИ deps ("...") — иначе на свежем CI без
+  // существующего dist/ esbuild не зарезолвит shared-compliance/main.
   const phases = [
-    { name: 'shared-vite', filters: ['--filter', '@capsule/shared-vite'] },
+    { name: 'shared-vite (+ deps)', filters: ['--filter', '@capsule/shared-vite...'] },
     {
       name: 'shared-* (rest) + web-* + cli',
       filters: [
         '--filter', '@capsule/shared-*',
+        '--filter', '!@capsule/shared-compliance',
         '--filter', '!@capsule/shared-biome',
         '--filter', '!@capsule/shared-vite',
         '--filter', '@capsule/web-*',
