@@ -1,4 +1,5 @@
 import { createApp, createLayer, createLib, createWorkspace } from '../actions';
+import { ICONS } from '../cli/tui/icons';
 import { LAYER_ICONS, LAYER_LABELS, type Layer } from '../templates/layers';
 import type { Command } from './types';
 
@@ -34,8 +35,8 @@ const layerCommand = (layer: Layer): Command => ({
 export const createCommands: Command[] = [
   {
     id: 'create.workspace',
-    label: '🆕 Workspace',
-    icon: '🆕',
+    label: `${ICONS.workspaceNew} Workspace`,
+    icon: ICONS.workspaceNew,
     description: 'Создать новый capsule-workspace в текущей папке',
     scope: ['no-workspace'],
     category: 'create',
@@ -43,8 +44,8 @@ export const createCommands: Command[] = [
   },
   {
     id: 'create.app',
-    label: '📱 App',
-    icon: '📱',
+    label: `${ICONS.app} App`,
+    icon: ICONS.app,
     description: 'Создать новое приложение в apps/',
     scope: ['workspace-root'],
     category: 'create',
@@ -66,8 +67,8 @@ export const createCommands: Command[] = [
   },
   {
     id: 'create.lib',
-    label: '📦 Lib',
-    icon: '📦',
+    label: `${ICONS.lib} Lib`,
+    icon: ICONS.lib,
     description: 'Создать новую библиотеку в packages/',
     scope: ['workspace-root'],
     category: 'create',
