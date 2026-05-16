@@ -1,3 +1,13 @@
+## 0.1.1 (2026-05-16)
+
+### 🩹 Fixes
+
+- **release:** force --access=public for scoped packages ([9a1fb0e](https://github.com/egor6-66/capsule/commit/9a1fb0e))
+
+### ❤️ Thank You
+
+- EgorRaybul
+
 ## 0.1.0 (2026-05-16)
 
 ### 🚀 Features
