@@ -25,8 +25,71 @@
  * два шага — `version --skip-publish` затем `publish --registry=<url>`.
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { resolve, join } from 'node:path';
+
+const isDev = (mode) => mode !== 'prod';
+
+// Рекурсивно собираем package.json + CHANGELOG.md внутри packages/.
+// Не полагаемся на git — снапшот делаем чистыми Buffer'ами в памяти,
+// чтобы откат работал даже когда исходный pkg был uncommitted/staged/в conflict-state.
+const RELEASE_FILE_NAMES = new Set(['package.json', 'CHANGELOG.md']);
+
+const walkPackages = (dir, out) => {
+  let entries;
+  try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return; }
+  for (const e of entries) {
+    const p = join(dir, e.name);
+    if (e.isDirectory()) {
+      if (e.name === 'node_modules' || e.name === 'dist' || e.name === '.git') continue;
+      walkPackages(p, out);
+    } else if (e.isFile() && RELEASE_FILE_NAMES.has(e.name)) {
+      out.push(p);
+    }
+  }
+};
+
+const snapshotPackageFiles = () => {
+  const files = [];
+  walkPackages(resolve('packages'), files);
+  const original = new Map(); // absPath -> Buffer | null (null = файл не существовал)
+  for (const p of files) {
+    try { original.set(p, readFileSync(p)); } catch {}
+  }
+  return { dir: resolve('packages'), original };
+};
+
+let _restoreDone = false;
+const restorePackageFiles = (snapshot) => {
+  if (!snapshot || _restoreDone) return;
+  _restoreDone = true;
+  // Вернуть содержимое снапшотнутых файлов как было.
+  for (const [path, buf] of snapshot.original) {
+    try { writeFileSync(path, buf); } catch {}
+  }
+  // Удалить новые CHANGELOG.md / package.json, которых не было до bump'а.
+  const after = [];
+  walkPackages(snapshot.dir, after);
+  for (const p of after) {
+    if (!snapshot.original.has(p)) {
+      try { unlinkSync(p); } catch {}
+    }
+  }
+};
+
+const installCleanupHooks = (snapshot) => {
+  if (!snapshot) return;
+  const cleanup = () => restorePackageFiles(snapshot);
+  process.on('exit', cleanup);
+  for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK']) {
+    process.on(sig, () => { cleanup(); process.exit(130); });
+  }
+  process.on('uncaughtException', (e) => {
+    cleanup();
+    console.error(e);
+    process.exit(1);
+  });
+};
 
 const rawArgs = process.argv.slice(2);
 const positional = rawArgs.filter((a) => !a.startsWith('--')); // patch / minor / major / 1.2.3 / etc
@@ -143,21 +206,48 @@ for (const phase of phases) {
   }
 }
 
-const versionStatus = run([
-  'nx',
-  'release',
-  ...positional,
-  ...groupFlag,
-  ...firstRelease,
-  ...dryRun,
-  '--skip-publish',
-  '--verbose',
-]);
-if (versionStatus !== 0) process.exit(versionStatus);
+// DEV-режим: bump'аем версии только в файлах через `nx release version`
+//   (--no-git-* флаги поддерживает только эта субкоманда, не top-level `nx release`).
+//   Changelog не генерим — всё равно откатим в finally.
+// PROD-режим: оркестратор `nx release --skip-publish` как было — bump + changelog + commit + tag.
+const snapshot = isDev(mode) ? snapshotPackageFiles() : null;
+installCleanupHooks(snapshot);
+
+const versionCmd = isDev(mode)
+  ? [
+      'nx',
+      'release',
+      'version',
+      ...positional,
+      ...groupFlag,
+      ...firstRelease,
+      ...dryRun,
+      '--no-git-commit',
+      '--no-git-tag',
+      '--no-stage-changes',
+      '--verbose',
+    ]
+  : [
+      'nx',
+      'release',
+      ...positional,
+      ...groupFlag,
+      ...firstRelease,
+      ...dryRun,
+      '--skip-publish',
+      '--verbose',
+    ];
+
+const versionStatus = run(versionCmd);
+if (versionStatus !== 0) {
+  if (snapshot) restorePackageFiles(snapshot);
+  process.exit(versionStatus);
+}
 
 const auth = setupAuth();
+let publishStatus = 1;
 try {
-  const publishStatus = run([
+  publishStatus = run([
     'nx',
     'release',
     'publish',
@@ -168,7 +258,10 @@ try {
     registry,
     '--verbose',
   ]);
-  process.exit(publishStatus);
 } finally {
   auth.cleanup();
+  // process.exit() в Node не выполняет finally блоки — поэтому restore делаем здесь,
+  // а exit вынесли наружу.
+  if (snapshot) restorePackageFiles(snapshot);
 }
+process.exit(publishStatus);
