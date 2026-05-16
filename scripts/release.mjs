@@ -102,6 +102,14 @@ const run = (cmd) => {
   return r.status ?? 1;
 };
 
+// Scope для override @capsule:registry в .npmrc — у corner-case'а высокий
+// приоритет: если корневой .npmrc проекта (используется для dev в verdaccio)
+// содержит `@capsule:registry=http://localhost:4873/`, npm/pnpm берут эту
+// строку для scoped пакетов И ИГНОРИРУЮТ `--registry` флаг при publish.
+// Поэтому дописываем правильный scope в конец .npmrc на время publish
+// (last-wins внутри одного файла) и восстанавливаем в cleanup.
+const SCOPE = '@capsule';
+
 // Auth setup: пишем во временный .npmrc, чистится по exit/SIGINT.
 //   nexus:  NEXUS_TOKEN (предпочтительно) или NEXUS_USERNAME+PASSWORD
 //   npm:    NPM_TOKEN
@@ -122,16 +130,19 @@ const setupAuth = () => {
     token = process.env.GITLAB_TOKEN;
   }
 
-  if (!token && !(username && password)) return { cleanup: () => {} };
-
   const url = new URL(registry);
   const base = `//${url.host}${url.pathname.replace(/\/?$/, '/')}`;
-  const lines = token
-    ? [`${base}:_authToken=${token}`]
-    : [
-        `${base}:_auth=${Buffer.from(`${username}:${password}`).toString('base64')}`,
-        `${base}:always-auth=true`,
-      ];
+  // Override scope-registry всегда (даже без token) — иначе корневой .npmrc
+  // с verdaccio-строкой ломает publish во внешний реестр.
+  const lines = [`${SCOPE}:registry=${registry}`];
+  if (token) {
+    lines.push(`${base}:_authToken=${token}`);
+  } else if (username && password) {
+    lines.push(
+      `${base}:_auth=${Buffer.from(`${username}:${password}`).toString('base64')}`,
+      `${base}:always-auth=true`,
+    );
+  }
 
   const npmrcPath = resolve('.npmrc');
   const backup = existsSync(npmrcPath) ? readFileSync(npmrcPath, 'utf8') : null;
@@ -139,7 +150,7 @@ const setupAuth = () => {
     npmrcPath,
     `${backup ?? ''}\n# release temp auth (registry=${registryKey})\n${lines.join('\n')}\n`,
   );
-  console.log(`\x1b[36m[release]\x1b[0m auth для ${url.host} → .npmrc`);
+  console.log(`\x1b[36m[release]\x1b[0m ${SCOPE}:registry → ${url.host} (auth=${token ? 'token' : username ? 'basic' : 'none'})`);
 
   const cleanup = () => {
     try {
