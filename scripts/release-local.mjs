@@ -122,16 +122,27 @@ if (toPublish.length === 0) fail('Нечего публиковать — спи
 log(`К публикации: ${toPublish.map((p) => `${p.pkg.name}@${p.pkg.version}`).join(', ')}`);
 
 // ---------------------------------------------------------------------------
-// 3. Очистка verdaccio storage (чтобы переопубликовать ту же версию)
+// 3. Очистка verdaccio: unpublish через API + rm storage директории.
+//    Только rmSync не работает — verdaccio держит in-memory state и при повторной
+//    публикации той же версии возвращает 403 "cannot publish over previously
+//    published". `npm unpublish --force` сбрасывает и стейт, и хранилище.
 // ---------------------------------------------------------------------------
 if (SHOULD_CLEAN) {
   const storage = resolve(repoRoot, 'tmp/local-registry/storage');
   for (const { pkg } of toPublish) {
-    const pkgDir = join(storage, pkg.name); // pkg.name = "@capsuletech/foo"
+    // Через npm API — даже если пакета нет в registry, упадёт с warning, не критично.
+    spawnSync(
+      'npm',
+      ['unpublish', '--force', pkg.name, '--registry', REGISTRY],
+      { cwd: repoRoot, stdio: ['ignore', 'ignore', 'ignore'], shell: process.platform === 'win32' },
+    );
+    // Подчищаем storage на всякий случай (если unpublish не дошёл).
+    const pkgDir = join(storage, pkg.name);
     if (existsSync(pkgDir)) {
-      try { rmSync(pkgDir, { recursive: true, force: true }); log(`storage ✂ ${pkg.name}`); }
+      try { rmSync(pkgDir, { recursive: true, force: true }); }
       catch (e) { warn(`storage cleanup ${pkg.name}: ${e.message}`); }
     }
+    log(`reset ${pkg.name}`);
   }
 }
 
