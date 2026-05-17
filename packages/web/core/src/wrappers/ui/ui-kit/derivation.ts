@@ -6,6 +6,15 @@
  * в node-only тесты.
  */
 
+export type AnyEvent = Event & {
+  currentTarget?: unknown;
+  key?: string;
+  ctrlKey?: boolean;
+  shiftKey?: boolean;
+  altKey?: boolean;
+  metaKey?: boolean;
+};
+
 /** Деривация name: первый «конкретный» тег (без @-префикса) из meta.tags. */
 export const deriveName = (meta: any): string | undefined =>
   meta?.tags?.find?.((t: string) => typeof t === 'string' && !t.startsWith('@'));
@@ -36,4 +45,41 @@ export const deriveInputType = (meta: any): string | undefined => {
     if (mapped) return mapped;
   }
   return undefined;
+};
+
+/**
+ * Сборка `target` объекта, который ControllerProxy и handlers получают на каждое
+ * событие. Pure-функция от (DOM event, JSX-merged props, derived name).
+ *
+ * Приоритет полей:
+ *  - `name`: DOM-атрибут `name` → derived из meta.tags → `props.name`.
+ *  - `value`: для checkbox — el.checked, иначе el.value, иначе `props.value`.
+ *  - `meta`/`payload`: JSX-props напрямую (Solid не сериализует объекты в
+ *    DOM-атрибуты — см. A-5 в cleanup-plan).
+ *  - `modifiers`: если event есть — boolean-флаги, иначе undefined.
+ */
+export const getTargetData = (
+  e: AnyEvent | undefined,
+  finalProps: { name?: unknown; value?: unknown; meta?: unknown; dynamicMeta?: unknown; payload?: unknown },
+  derivedName?: string,
+) => {
+  // biome-ignore lint/suspicious/noExplicitAny: DOM Element shape varies.
+  const el = e?.currentTarget as any;
+  return {
+    name: el?.name || derivedName || finalProps.name,
+    value: el?.type === 'checkbox' ? el?.checked : (el?.value ?? finalProps.value),
+    type: el?.type,
+    meta: finalProps?.meta,
+    dynamicMeta: finalProps?.dynamicMeta,
+    payload: finalProps?.payload,
+    key: e?.key,
+    modifiers: e
+      ? {
+          ctrl: !!e.ctrlKey,
+          shift: !!e.shiftKey,
+          alt: !!e.altKey,
+          meta: !!e.metaKey,
+        }
+      : undefined,
+  };
 };

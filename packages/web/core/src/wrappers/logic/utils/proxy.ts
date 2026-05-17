@@ -45,7 +45,10 @@ export const ControllerProxy = ({
           if (!parent?.controller) return null;
           const enrichedTarget = { ...target, payload: payload ?? target.payload };
           const targetMethod = overrides?.[methodName] ?? methodName;
-          return await parent.controller[targetMethod]?.(enrichedTarget, context);
+          // `?? null`: optional-chain в parent даёт undefined при missing method,
+          // но тип возврата `Promise<T | null>` обещает null — выравниваем.
+          // Тест в __tests__/proxy.test.ts (`next() returns null if parent has no matching method`).
+          return (await parent.controller[targetMethod]?.(enrichedTarget, context)) ?? null;
         };
 
         // если метод не найден — автобабблинг к родителю

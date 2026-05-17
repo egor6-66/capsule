@@ -1,47 +1,15 @@
 import { createEffect, createUniqueId, mergeProps, onCleanup, splitProps } from 'solid-js';
 import type { ICtx } from '../../ctx';
-import { TAG_TO_INPUT_TYPE, deriveInputType, deriveName } from './derivation';
+import {
+  type AnyEvent,
+  TAG_TO_INPUT_TYPE,
+  deriveInputType,
+  deriveName,
+  getTargetData,
+} from './derivation';
 import * as UI from './imports';
 
-export { TAG_TO_INPUT_TYPE, deriveInputType, deriveName };
-
-type AnyEvent = Event & {
-  currentTarget?: any;
-  key?: string;
-  ctrlKey?: boolean;
-  shiftKey?: boolean;
-  altKey?: boolean;
-  metaKey?: boolean;
-};
-
-const getTargetData = (e: AnyEvent | undefined, finalProps: any, derivedName?: string) => {
-  const el: any = e?.currentTarget;
-  return {
-    name: el?.name || derivedName || finalProps.name,
-    value: el?.type === 'checkbox' ? el?.checked : (el?.value ?? finalProps.value),
-    type: el?.type,
-    // `meta` приходит как JSX-prop (объект), а не как DOM-атрибут. Solid не
-    // сериализует объекты в attributes (получился бы `"[object Object]"`),
-    // поэтому раньше существовавший `parseMeta(el.getAttribute('meta'), ...)`
-    // путь всегда брал fallback — это был мёртвый код (см. A-5 cleanup-plan).
-    meta: finalProps?.meta,
-    dynamicMeta: finalProps?.dynamicMeta,
-    // JSX-declared payload — произвольные данные, которые автор Entity
-    // прикрепил к элементу через `payload={{...}}`. На первом уровне (UI-click)
-    // тут лежит то, что задал автор. На последующих ярусах через `next(arg)`
-    // ControllerProxy перетирает на bubble-аргумент.
-    payload: finalProps?.payload,
-    key: e?.key,
-    modifiers: e
-      ? {
-          ctrl: !!e.ctrlKey,
-          shift: !!e.shiftKey,
-          alt: !!e.altKey,
-          meta: !!e.metaKey,
-        }
-      : undefined,
-  };
-};
+export { TAG_TO_INPUT_TYPE, deriveInputType, deriveName, getTargetData };
 
 /**
  * Закрытый набор перехватываемых событий (см. ADR 009).
