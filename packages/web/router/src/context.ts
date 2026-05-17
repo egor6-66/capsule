@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'solid-js';
-import type { ICapsuleRouter } from './service';
+import type { ICapsuleRouter } from './types';
 
 /**
  * Solid-контекст для capsule-обёртки роутера.
