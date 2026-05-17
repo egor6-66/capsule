@@ -75,7 +75,8 @@ jobs:
         id: bundle
         shell: pwsh
         run: |
-          $bundleRoot = "backend/desktop/target/release/bundle"
+          # Cargo workspace в backend/ — target/ общий, не backend/desktop/target/.
+          $bundleRoot = "backend/target/release/bundle"
           $files = Get-ChildItem -Path $bundleRoot -Recurse -Include *.msi,*.exe -ErrorAction SilentlyContinue
           if (-not $files) { Write-Error "No .msi/.exe artifacts found under $bundleRoot"; exit 1 }
           $files | ForEach-Object { Write-Host "found: $($_.FullName) ($([math]::Round($_.Length/1MB,2)) MB)" }
