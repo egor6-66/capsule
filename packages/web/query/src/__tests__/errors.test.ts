@@ -3,6 +3,7 @@ import {
   ApiError,
   ConflictError,
   ForbiddenError,
+  HttpError,
   NetworkError,
   NotFoundError,
   ServerError,
@@ -65,6 +66,26 @@ describe.each([
     expect(e.code).toBe(code);
     expect(e.status).toBeUndefined();
     expect(e.name).toBe(name);
+  });
+});
+
+describe('HttpError', () => {
+  it('carries status + Response, message reflects statusText, code = "http"', () => {
+    const res = new Response('not found', { status: 404, statusText: 'Not Found' });
+    const e = new HttpError(404, res);
+    expect(e).toBeInstanceOf(ApiError);
+    expect(e).toBeInstanceOf(HttpError);
+    expect(e.status).toBe(404);
+    expect(e.response).toBe(res);
+    expect(e.code).toBe('http');
+    expect(e.name).toBe('HttpError');
+    expect(e.message).toMatch(/HTTP 404 Not Found/);
+  });
+
+  it('preserves cause when provided', () => {
+    const cause = new Error('inner');
+    const e = new HttpError(500, new Response(null, { status: 500 }), { cause });
+    expect(e.cause).toBe(cause);
   });
 });
 

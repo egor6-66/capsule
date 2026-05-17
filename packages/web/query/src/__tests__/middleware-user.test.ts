@@ -3,6 +3,7 @@ import {
   ApiError,
   ConflictError,
   ForbiddenError,
+  HttpError,
   NetworkError,
   NotFoundError,
   ServerError,
@@ -90,6 +91,41 @@ describe('statusMapper', () => {
     }).catch((e) => e);
     expect(caught).toBeInstanceOf(ServerError);
     expect(caught.status).toBe(status);
+  });
+
+  it.each([
+    [401, UnauthorizedError],
+    [403, ForbiddenError],
+    [404, NotFoundError],
+    [409, ConflictError],
+  ])('HttpError(%i) → %s (новый путь, без bare-Error fallback)', async (status, ErrCtor) => {
+    const ctx = mkCtx();
+    const httpErr = new HttpError(status, new Response(null, { status }));
+    await expect(
+      statusMapper()(ctx, async () => {
+        throw httpErr;
+      }),
+    ).rejects.toBeInstanceOf(ErrCtor);
+  });
+
+  it('HttpError(500+) → ServerError, status preserved', async () => {
+    const ctx = mkCtx();
+    const httpErr = new HttpError(503, new Response(null, { status: 503 }));
+    const caught: any = await statusMapper()(ctx, async () => {
+      throw httpErr;
+    }).catch((e) => e);
+    expect(caught).toBeInstanceOf(ServerError);
+    expect(caught.status).toBe(503);
+    expect(caught.cause).toBe(httpErr);
+  });
+
+  it('HttpError with unmapped status → rethrows as-is', async () => {
+    const ctx = mkCtx();
+    const httpErr = new HttpError(418, new Response(null, { status: 418 }));
+    const caught: any = await statusMapper()(ctx, async () => {
+      throw httpErr;
+    }).catch((e) => e);
+    expect(caught).toBe(httpErr);
   });
 
   it('already-ApiError passes through unchanged', async () => {
