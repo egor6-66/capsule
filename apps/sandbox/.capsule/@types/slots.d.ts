@@ -2,6 +2,7 @@
 declare global {
   interface Widgets {
     Demos: {
+      ArgtypesEditor: typeof import('@widgets/demos/argtypesEditor').default;
       Dnd: typeof import('@widgets/demos/dnd').default;
       EditorState: typeof import('@widgets/demos/editorState').default;
       Hub: typeof import('@widgets/demos/hub').default;
@@ -13,7 +14,7 @@ declare global {
       Main: typeof import('@widgets/footers/main').default;
     };
     Forms: {
-      Auth: typeof import('@widgets/forms/_auth').default;
+      Auth: typeof import('@widgets/forms/auth').default;
     };
     Headers: {
       Main: typeof import('@widgets/headers/main').default;
@@ -40,7 +41,7 @@ declare global {
   }
   interface Features {
     Viewer: {
-      Auth: typeof import('@features/viewer/_auth').default;
+      Auth: typeof import('@features/viewer/auth').default;
     };
   }
   interface Shapes {

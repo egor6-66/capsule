@@ -1,4 +1,4 @@
-import { z } from '@capsuletech/zod';
+import { z } from '@capsuletech/shared-zod';
 import { AlignJustify, AlignLeft, CreditCard, Heading1, PanelBottom, Type } from 'lucide-solid';
 import type { IComponentManifest } from '../types';
 

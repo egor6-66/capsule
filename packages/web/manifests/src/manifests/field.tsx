@@ -1,4 +1,4 @@
-import { z } from '@capsuletech/zod';
+import { z } from '@capsuletech/shared-zod';
 import { AlertCircle, FormInput, Inbox, Info, Tag } from 'lucide-solid';
 import type { IComponentManifest } from '../types';
 

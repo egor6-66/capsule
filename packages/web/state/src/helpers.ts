@@ -3,7 +3,7 @@ import { find } from 'es-toolkit/compat';
 import { omitBy, pickBy } from 'es-toolkit/object';
 import { expandTags } from './tag-registry';
 
-interface ComponentData {
+export interface ComponentData {
   meta?: { tags?: string[] };
   dynamicMeta?: { tags?: string[] };
   [key: string]: any;

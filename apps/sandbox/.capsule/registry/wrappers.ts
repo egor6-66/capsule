@@ -3,6 +3,7 @@ import { lazy } from 'solid-js';
 
 export const Widgets = {
   Demos: {
+    ArgtypesEditor: lazy(() => import('@widgets/demos/argtypesEditor')) as unknown as typeof import('@widgets/demos/argtypesEditor').default,
     Dnd: lazy(() => import('@widgets/demos/dnd')) as unknown as typeof import('@widgets/demos/dnd').default,
     EditorState: lazy(() => import('@widgets/demos/editorState')) as unknown as typeof import('@widgets/demos/editorState').default,
     Hub: lazy(() => import('@widgets/demos/hub')) as unknown as typeof import('@widgets/demos/hub').default,
@@ -14,7 +15,7 @@ export const Widgets = {
     Main: lazy(() => import('@widgets/footers/main')) as unknown as typeof import('@widgets/footers/main').default
   },
   Forms: {
-    Auth: lazy(() => import('@widgets/forms/_auth')) as unknown as typeof import('@widgets/forms/_auth').default
+    Auth: lazy(() => import('@widgets/forms/auth')) as unknown as typeof import('@widgets/forms/auth').default
   },
   Headers: {
     Main: lazy(() => import('@widgets/headers/main')) as unknown as typeof import('@widgets/headers/main').default
@@ -44,7 +45,7 @@ export const Controllers = {
 
 export const Features = {
   Viewer: {
-    Auth: lazy(() => import('@features/viewer/_auth')) as unknown as typeof import('@features/viewer/_auth').default
+    Auth: lazy(() => import('@features/viewer/auth')) as unknown as typeof import('@features/viewer/auth').default
   }
 };
 

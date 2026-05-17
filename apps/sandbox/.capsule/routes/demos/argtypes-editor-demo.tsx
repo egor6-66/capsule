@@ -2,8 +2,8 @@
 import { lazy } from 'solid-js';
 import { createFileRoute } from '@tanstack/solid-router';
 
-const Component = lazy(() => import('@pages/home/apps') as Promise<{ default: any }>);
+const Component = lazy(() => import('@pages/demos/argtypes-editor-demo') as Promise<{ default: any }>);
 
-export const Route = createFileRoute('/home/apps')({
+export const Route = createFileRoute('/demos/argtypes-editor-demo')({
   component: Component,
 });

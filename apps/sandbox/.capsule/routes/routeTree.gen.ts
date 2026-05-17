@@ -23,6 +23,7 @@ import { Route as DemosManifestsDemoRouteImport } from './demos/manifests-demo'
 import { Route as DemosInspectorDemoRouteImport } from './demos/inspector-demo'
 import { Route as DemosEditorStateDemoRouteImport } from './demos/editor-state-demo'
 import { Route as DemosDndDemoRouteImport } from './demos/dnd-demo'
+import { Route as DemosArgtypesEditorDemoRouteImport } from './demos/argtypes-editor-demo'
 
 const Home_rootRoute = Home_rootRouteImport.update({
   id: '/__root',
@@ -92,11 +93,17 @@ const DemosDndDemoRoute = DemosDndDemoRouteImport.update({
   path: '/dnd-demo',
   getParentRoute: () => DemosRouteRoute,
 } as any)
+const DemosArgtypesEditorDemoRoute = DemosArgtypesEditorDemoRouteImport.update({
+  id: '/argtypes-editor-demo',
+  path: '/argtypes-editor-demo',
+  getParentRoute: () => DemosRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/demos': typeof Demos_rootRoute
   '/home': typeof Home_rootRoute
   '/auth': typeof AuthRoute
+  '/demos/argtypes-editor-demo': typeof DemosArgtypesEditorDemoRoute
   '/demos/dnd-demo': typeof DemosDndDemoRoute
   '/demos/editor-state-demo': typeof DemosEditorStateDemoRoute
   '/demos/inspector-demo': typeof DemosInspectorDemoRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/demos': typeof Demos_rootRoute
   '/home': typeof Home_rootRoute
   '/auth': typeof AuthRoute
+  '/demos/argtypes-editor-demo': typeof DemosArgtypesEditorDemoRoute
   '/demos/dnd-demo': typeof DemosDndDemoRoute
   '/demos/editor-state-demo': typeof DemosEditorStateDemoRoute
   '/demos/inspector-demo': typeof DemosInspectorDemoRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/home': typeof HomeRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/demos/__root': typeof Demos_rootRoute
+  '/demos/argtypes-editor-demo': typeof DemosArgtypesEditorDemoRoute
   '/demos/dnd-demo': typeof DemosDndDemoRoute
   '/demos/editor-state-demo': typeof DemosEditorStateDemoRoute
   '/demos/inspector-demo': typeof DemosInspectorDemoRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/demos'
     | '/home'
     | '/auth'
+    | '/demos/argtypes-editor-demo'
     | '/demos/dnd-demo'
     | '/demos/editor-state-demo'
     | '/demos/inspector-demo'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/demos'
     | '/home'
     | '/auth'
+    | '/demos/argtypes-editor-demo'
     | '/demos/dnd-demo'
     | '/demos/editor-state-demo'
     | '/demos/inspector-demo'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/home'
     | '/auth'
     | '/demos/__root'
+    | '/demos/argtypes-editor-demo'
     | '/demos/dnd-demo'
     | '/demos/editor-state-demo'
     | '/demos/inspector-demo'
@@ -291,11 +303,19 @@ declare module '@tanstack/solid-router' {
       preLoaderRoute: typeof DemosDndDemoRouteImport
       parentRoute: typeof DemosRouteRoute
     }
+    '/demos/argtypes-editor-demo': {
+      id: '/demos/argtypes-editor-demo'
+      path: '/argtypes-editor-demo'
+      fullPath: '/demos/argtypes-editor-demo'
+      preLoaderRoute: typeof DemosArgtypesEditorDemoRouteImport
+      parentRoute: typeof DemosRouteRoute
+    }
   }
 }
 
 interface DemosRouteRouteChildren {
   Demos_rootRoute: typeof Demos_rootRoute
+  DemosArgtypesEditorDemoRoute: typeof DemosArgtypesEditorDemoRoute
   DemosDndDemoRoute: typeof DemosDndDemoRoute
   DemosEditorStateDemoRoute: typeof DemosEditorStateDemoRoute
   DemosInspectorDemoRoute: typeof DemosInspectorDemoRoute
@@ -306,6 +326,7 @@ interface DemosRouteRouteChildren {
 
 const DemosRouteRouteChildren: DemosRouteRouteChildren = {
   Demos_rootRoute: Demos_rootRoute,
+  DemosArgtypesEditorDemoRoute: DemosArgtypesEditorDemoRoute,
   DemosDndDemoRoute: DemosDndDemoRoute,
   DemosEditorStateDemoRoute: DemosEditorStateDemoRoute,
   DemosInspectorDemoRoute: DemosInspectorDemoRoute,

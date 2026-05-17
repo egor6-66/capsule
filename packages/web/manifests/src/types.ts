@@ -1,4 +1,4 @@
-import type { ZodTypeAny } from '@capsuletech/zod';
+import type { ZodTypeAny } from '@capsuletech/shared-zod';
 import type { JSX } from 'solid-js';
 
 /**

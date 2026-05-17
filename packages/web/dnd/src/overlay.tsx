@@ -32,8 +32,8 @@ export const DragOverlay = (props: IDragOverlayProps) => {
           class={props.class}
           style={{
             position: 'fixed',
-            left: `${dnd.state.pointer()?.x + offX()}px`,
-            top: `${dnd.state.pointer()?.y + offY()}px`,
+            left: `${(dnd.state.pointer()?.x ?? 0) + offX()}px`,
+            top: `${(dnd.state.pointer()?.y ?? 0) + offY()}px`,
             'pointer-events': 'none',
             'z-index': '9999',
             transform: 'translate(-50%, -50%)',
