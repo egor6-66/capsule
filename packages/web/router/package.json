@@ -15,7 +15,10 @@
     "dist"
   ],
   "scripts": {
-    "build": "vite build"
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {},
   "peerDependencies": {
