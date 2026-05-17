@@ -117,7 +117,8 @@ const renderRuntime = (leaves: Leaf[]): string => {
   // `Shapes is not defined`, когда у app'а нет ни одного shape-файла.
   const layerOrder = Object.keys(LAYER_TO_NAMESPACE);
   for (const layer of layerOrder) {
-    const namespace = LAYER_TO_NAMESPACE[layer] ?? names(layer).className;
+    const namespace =
+      LAYER_TO_NAMESPACE[layer as keyof typeof LAYER_TO_NAMESPACE] ?? names(layer).className;
     const leaves = byLayer[layer] ?? [];
     if (leaves.length === 0) {
       lines.push(`export const ${namespace} = {};`);
@@ -165,7 +166,8 @@ const renderTypes = (leaves: Leaf[]): string => {
   // в `@capsuletech/core` сломается и `Controllers`/`Shapes` будут `unknown`.
   const layerOrder = Object.keys(LAYER_TO_NAMESPACE);
   for (const layer of layerOrder) {
-    const namespace = LAYER_TO_NAMESPACE[layer] ?? names(layer).className;
+    const namespace =
+      LAYER_TO_NAMESPACE[layer as keyof typeof LAYER_TO_NAMESPACE] ?? names(layer).className;
     const leaves = byLayer[layer] ?? [];
     if (leaves.length === 0) {
       lines.push(`  interface ${namespace} {}`);

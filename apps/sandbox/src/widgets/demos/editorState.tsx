@@ -8,7 +8,7 @@ import {
   moveNode,
   removeNode,
 } from '@capsuletech/editor-state';
-import { canAcceptChild, getAllManifests, getManifest } from '@capsuletech/manifests';
+import { canAcceptChild, getAllManifests, getManifest } from '@capsuletech/web-manifests';
 import { type ISchema, Renderer } from '@capsuletech/renderer';
 import { For, Show, createMemo, createSignal } from 'solid-js';
 
