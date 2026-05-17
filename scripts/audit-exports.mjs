@@ -76,7 +76,16 @@ const run = (cmd, cwd) => {
 for (const pkg of targets) {
   console.log(`\n══ ${pkg.name}@${pkg.version} ══`);
 
+  // Config-only пакеты (биом-конфиг и т.п.) не имеют build-step. Если в
+  // package.json нет `scripts.build` — это нормально, пропускаем.
+  const pkgJson = JSON.parse(readFileSync(join(pkg.dir, 'package.json'), 'utf8'));
+  const hasBuildScript = Boolean(pkgJson.scripts?.build);
+
   if (!existsSync(join(pkg.dir, 'dist'))) {
+    if (!hasBuildScript) {
+      console.log('  ⚪ skip — config-only package (no build script)');
+      continue;
+    }
     console.log('  ⚠ dist/ missing — run `pnpm --filter ' + pkg.name + ' build` first');
     hadCritical = true;
     continue;
@@ -110,14 +119,42 @@ for (const pkg of targets) {
     continue;
   }
   try {
-    const attw = run(`pnpm exec attw ${tgz}`, pkg.dir);
-    // bundler line is what we care about (current consumers are Vite-only)
-    const bundlerLine = attw.output.split('\n').find((l) => l.trim().startsWith('bundler:'));
-    const hasFatal = /💀/.test(attw.output);
-    const bundlerOk = bundlerLine?.includes('🟢');
-    console.log('  attw bundler:', bundlerOk ? '✅' : '❌');
-    if (!bundlerOk) hadCritical = true;
-    if (hasFatal) console.log('    (node16/node10 has 💀 — non-blocking for Vite, but flag for future)');
+    // -f json: стабильный машинный формат. Текстовый output меняется между
+    // версиями attw (раньше был list, теперь table), парсить ASCII-таблицу —
+    // источник ложных срабатываний (см. историю с lib-builder).
+    const attw = run(`pnpm exec attw -f json ${tgz}`, pkg.dir);
+    let bundlerOk = false;
+    let hasNonBundlerProblems = false;
+    let parseError = null;
+    try {
+      const data = JSON.parse(attw.output);
+      const entrypoints = data?.analysis?.entrypoints ?? {};
+      // bundler-резолюция должна быть успешной для КАЖДОГО subpath.
+      bundlerOk = Object.values(entrypoints).every((ep) => {
+        const r = ep?.resolutions?.bundler;
+        return r && (!r.visibleProblems || r.visibleProblems.length === 0);
+      });
+      // Non-bundler problems = проблемы в node10/node16-cjs/node16-esm.
+      // Сейчас не блокируют (Vite-only консьюмеры), но флагнём для будущего публичного релиза.
+      hasNonBundlerProblems = Object.values(entrypoints).some((ep) => {
+        const res = ep?.resolutions ?? {};
+        return Object.entries(res).some(
+          ([kind, r]) => kind !== 'bundler' && r?.visibleProblems?.length > 0,
+        );
+      });
+    } catch (e) {
+      parseError = e;
+    }
+    if (parseError) {
+      console.log('  attw: ❌ JSON parse failed:', parseError.message);
+      hadCritical = true;
+    } else {
+      console.log('  attw bundler:', bundlerOk ? '✅' : '❌');
+      if (!bundlerOk) hadCritical = true;
+      if (hasNonBundlerProblems) {
+        console.log('    (node16/node10 has problems — non-blocking for Vite, but flag for future)');
+      }
+    }
   } finally {
     rmSync(join(pkg.dir, tgz), { force: true });
   }

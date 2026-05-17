@@ -100,7 +100,22 @@ const NODE_EXTERNAL: (string | RegExp)[] = [
   'fsevents',
 ];
 
-const emitDistPackageJsonPlugin = (outDir: string): Plugin => {
+/**
+ * Преобразует root-package.json в форму, пригодную для записи в `dist/package.json`.
+ * Чистая функция — выделена ради тестируемости (см. `__tests__/libConfig.test.ts`).
+ *
+ * Что делает:
+ *  - удаляет dev-only поля (`scripts`, `devDependencies`, `files`, `publishConfig`);
+ *  - удаляет `exports` — Node всё равно игнорирует nested-exports (только root
+ *    package.json'у этот ключ важен), а наличие здесь ловит publint-warning о
+ *    «inconsistent resolution для некоторых бандлеров». См. cleanup-plan S-3;
+ *  - переписывает `main`/`module`/`types`/`typings` со срезанием `./<outDir>/` префикса,
+ *    т.к. они теперь относительны к `dist/`, а не к корню пакета.
+ */
+export const cleanRootPkgForDist = (
+  pkg: Record<string, unknown>,
+  outDir: string,
+): Record<string, unknown> => {
   const stripOutDir = (p: string): string => {
     const prefix = `./${outDir}/`;
     if (p.startsWith(prefix)) return `./${p.slice(prefix.length)}`;
@@ -108,20 +123,17 @@ const emitDistPackageJsonPlugin = (outDir: string): Plugin => {
     return p;
   };
 
-  const rewriteExports = (value: unknown): unknown => {
-    if (typeof value === 'string') return stripOutDir(value);
-    if (Array.isArray(value)) return value.map(rewriteExports);
-    if (value && typeof value === 'object') {
-      const next: Record<string, unknown> = {};
-      for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-        if (k === 'source') continue;
-        next[k] = rewriteExports(v);
-      }
-      return next;
-    }
-    return value;
-  };
+  const next: Record<string, unknown> = { ...pkg };
+  for (const key of ['scripts', 'devDependencies', 'files', 'publishConfig', 'exports'] as const) {
+    delete next[key];
+  }
+  for (const key of ['main', 'module', 'types', 'typings'] as const) {
+    if (typeof next[key] === 'string') next[key] = stripOutDir(next[key] as string);
+  }
+  return next;
+};
 
+const emitDistPackageJsonPlugin = (outDir: string): Plugin => {
   return {
     name: 'capsule:emit-dist-package-json',
     apply: 'build',
@@ -129,20 +141,12 @@ const emitDistPackageJsonPlugin = (outDir: string): Plugin => {
       const rootPkgPath = resolve('package.json');
       const raw = readFileSync(rootPkgPath, 'utf8');
       const pkg = JSON.parse(raw) as Record<string, unknown>;
-      delete pkg.scripts;
-      delete pkg.devDependencies;
-      delete pkg.files;
-      delete pkg.publishConfig;
-
-      for (const key of ['main', 'module', 'types', 'typings'] as const) {
-        if (typeof pkg[key] === 'string') pkg[key] = stripOutDir(pkg[key] as string);
-      }
-      if (pkg.exports) pkg.exports = rewriteExports(pkg.exports);
+      const cleaned = cleanRootPkgForDist(pkg, outDir);
 
       const distDirPath = resolve(outDir);
       mkdirSync(distDirPath, { recursive: true });
       const distPkgPath = resolve(distDirPath, 'package.json');
-      writeFileSync(distPkgPath, `${JSON.stringify(pkg, null, 2)}\n`, 'utf8');
+      writeFileSync(distPkgPath, `${JSON.stringify(cleaned, null, 2)}\n`, 'utf8');
     },
   };
 };
