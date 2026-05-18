@@ -13,6 +13,7 @@ import type { AnyRoute, AnyRouter, RouterCore } from '@tanstack/router-core';
  * См. [[014-router-api-extension|ADR 014]] — generic вместо зашитого
  * `isAuthenticated?: boolean`.
  */
+// biome-ignore lint/complexity/noBannedTypes: empty-object default for structural intersection — `Record<string, never>` would forbid the `[k]: unknown` index signature below, breaking TanStack guard typing.
 export type ICapsuleRouterContext<TUser extends object = {}> = TUser & {
   [k: string]: unknown;
 };
