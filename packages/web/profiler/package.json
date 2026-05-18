@@ -19,6 +19,16 @@
       "types": "./dist/components/index.d.ts",
       "import": "./dist/components.mjs",
       "default": "./dist/components.mjs"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core.mjs",
+      "default": "./dist/core.mjs"
+    },
+    "./collectors": {
+      "types": "./dist/collectors/index.d.ts",
+      "import": "./dist/collectors.mjs",
+      "default": "./dist/collectors.mjs"
     }
   },
   "files": [
@@ -26,7 +36,9 @@
   ],
   "scripts": {
     "build": "vite build",
-    "dev": "vite build --watch"
+    "dev": "vite build --watch",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "web-vitals": "^5.2.0"

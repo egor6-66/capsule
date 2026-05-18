@@ -1,23 +1,28 @@
 import {
   type JSX,
   createContext,
-  createEffect,
   createMemo,
   createSignal,
   onCleanup,
+  onMount,
   useContext,
 } from 'solid-js';
 import { Dashboard } from '../components';
 import {
-  getConnectionType,
-  getDomReadyTime,
-  getMemoryMetrics,
-  getNetworkMetrics,
-  setupWebVitalsTracking,
-} from '../utils';
+  connectionCollector,
+  memoryCollector,
+  navigationCollector,
+  networkCollector,
+  webVitalsCollector,
+} from '../collectors';
+import { createMetricsBus } from '../core/bus';
+import type { IMetricId, IMetricMeta, IMetricSample, IMetricsBus } from '../core/schema';
 
+/** @deprecated use `useProfiler()` from `@capsuletech/web-profiler/api` (coming in Phase 2b). */
 export interface IMonitoringContextType {
   updateComponentMetric: (name: string, value: number | string) => void;
+  /** @internal */
+  bus: IMetricsBus;
 }
 
 export const VitalsMonitoringContext = createContext<IMonitoringContextType | undefined>(undefined);
@@ -27,87 +32,79 @@ export interface VitalsMonitoringProviderProps {
   showDashboard?: boolean;
 }
 
+const LEGACY_LABEL: Partial<Record<IMetricId, string>> = {
+  cls: 'CLS',
+  fcp: 'FCP',
+  lcp: 'LCP',
+  inp: 'INP',
+  ttfb: 'TTFB',
+  memory: '💻 Memory Usage',
+  'network.transfer': '📡 Network Load',
+  'network.decoded': '📦 Total Bundle',
+  'dom.ready': '⏱️ Dom Ready',
+  connection: '🌐 Network',
+};
+
+function toLegacyKey(id: IMetricId, meta: IMetricMeta | undefined): string {
+  const fromTable = LEGACY_LABEL[id];
+  if (fromTable) return fromTable;
+  if (id.startsWith('custom.')) return meta?.label ?? id.slice('custom.'.length);
+  return meta?.label ?? id;
+}
+
 export function VitalsMonitoringProvider(props: VitalsMonitoringProviderProps) {
-  const [displayMetrics, setDisplayMetrics] = createSignal<Record<string, number>>({});
-  const metricsRef: Record<string, number> = {};
+  const bus = createMetricsBus();
+  const showDashboard = () => props.showDashboard !== false;
+
+  const [displayMetrics, setDisplayMetrics] = createSignal<Record<string, number | string>>({});
+  const displayRef: Record<string, number | string> = {};
   let rafId: number | null = null;
-  const showDashboard = () => props.showDashboard !== false; // default true
 
-  const updateComponentMetric = (name: string, value: number | string) => {
-    if (metricsRef[name] === value) return;
-
-    if (typeof value === 'number') {
-      metricsRef[name] = value;
+  const scheduleFlush = () => {
+    if (rafId !== null) return;
+    if (typeof requestAnimationFrame === 'undefined') {
+      setDisplayMetrics({ ...displayRef });
+      return;
     }
-
-    if (rafId === null) {
-      rafId = requestAnimationFrame(() => {
-        setDisplayMetrics({ ...metricsRef });
-        rafId = null;
-      });
-    }
+    rafId = requestAnimationFrame(() => {
+      setDisplayMetrics({ ...displayRef });
+      rafId = null;
+    });
   };
 
-  createEffect(() => {
-    // Setup Web Vitals tracking
-    const handleVitals = (metric: any) => {
-      updateComponentMetric(metric.name, metric.value);
-    };
+  const writeDisplay = (id: IMetricId, sample: IMetricSample, meta: IMetricMeta) => {
+    const key = toLegacyKey(id, meta);
+    if (displayRef[key] === sample.value) return;
+    displayRef[key] = sample.value;
+    scheduleFlush();
+  };
 
-    setupWebVitalsTracking(handleVitals);
+  const updateComponentMetric = (name: string, value: number | string) => {
+    bus.write(`custom.${name}` as IMetricId, value, { label: name });
+  };
 
-    // Initial resource metrics
-    const updateResourceMetrics = () => {
-      const { network, bundle } = getNetworkMetrics();
-      updateComponentMetric('📡 Network Load', network);
-      updateComponentMetric('📦 Total Bundle', bundle);
-    };
-
-    updateResourceMetrics();
-    setTimeout(updateResourceMetrics, 2000);
-
-    // Memory monitoring
-    const memoryInterval = setInterval(() => {
-      const mem = getMemoryMetrics();
-      if (mem !== null) {
-        updateComponentMetric('💻 Memory Usage', mem);
-      }
-    }, 2000);
-
-    // DOM ready time
-    const domTime = getDomReadyTime();
-    if (domTime !== null) {
-      updateComponentMetric('⏱️ Dom Ready', domTime);
-    }
-
-    // Connection type
-    const connection = getConnectionType();
-    if (connection !== 'unknown') {
-      updateComponentMetric('🌐 Network', connection);
-    }
-
-    // Performance Observer for new resources
-    const observer = new PerformanceObserver(() => {
-      updateResourceMetrics();
-    });
-
-    try {
-      observer.observe({ entryTypes: ['resource'] });
-    } catch {
-      // Some browsers may not support resource timing
-    }
+  onMount(() => {
+    const unsubscribe = bus.subscribe(writeDisplay);
+    const cleanups = [
+      webVitalsCollector().init(bus),
+      memoryCollector().init(bus),
+      networkCollector().init(bus),
+      navigationCollector().init(bus),
+      connectionCollector().init(bus),
+    ];
 
     onCleanup(() => {
-      clearInterval(memoryInterval);
-      observer.disconnect();
-      if (rafId !== null) {
+      unsubscribe();
+      for (const cleanup of cleanups) cleanup();
+      if (rafId !== null && typeof cancelAnimationFrame !== 'undefined') {
         cancelAnimationFrame(rafId);
       }
     });
   });
 
-  const contextValue = createMemo(() => ({
+  const contextValue = createMemo<IMonitoringContextType>(() => ({
     updateComponentMetric,
+    bus,
   }));
 
   return (
