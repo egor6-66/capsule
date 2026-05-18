@@ -60,8 +60,12 @@ type: index
 - [[router|@capsuletech/web-router]]
 - [[ui|@capsuletech/web-ui]]
 - [[style|@capsuletech/web-style]]
+- [[dnd|@capsuletech/web-dnd]]
+- [[renderer|@capsuletech/web-renderer]]
+- [[editor|@capsuletech/web-editor]] — `/manifests` + `/state` + `/inspector` subpaths
+- [[profiler|@capsuletech/web-profiler]]
 - [[compliance|@capsuletech/compliance]]
-- [[api-middleware|🌐 API middleware — endpoints + pipeline]]
+- [[api-middleware|🌐 API middleware — endpoints + pipeline]] — `@capsuletech/web-query`
 
 ## 🗺️ Быстрая навигация
 
