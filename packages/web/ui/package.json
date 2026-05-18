@@ -41,6 +41,26 @@
       "import": "./dist/components/field/*.mjs",
       "default": "./dist/components/field/*.mjs"
     },
+    "./flex": {
+      "types": "./dist/components/flex/index.d.ts",
+      "import": "./dist/components/flex/index.mjs",
+      "default": "./dist/components/flex/index.mjs"
+    },
+    "./flex/*": {
+      "types": "./dist/components/flex/*.d.ts",
+      "import": "./dist/components/flex/*.mjs",
+      "default": "./dist/components/flex/*.mjs"
+    },
+    "./grid": {
+      "types": "./dist/components/grid/index.d.ts",
+      "import": "./dist/components/grid/index.mjs",
+      "default": "./dist/components/grid/index.mjs"
+    },
+    "./grid/*": {
+      "types": "./dist/components/grid/*.d.ts",
+      "import": "./dist/components/grid/*.mjs",
+      "default": "./dist/components/grid/*.mjs"
+    },
     "./input": {
       "types": "./dist/components/input/index.d.ts",
       "import": "./dist/components/input/index.mjs",

@@ -2,6 +2,10 @@ export * from './typography';
 
 export * from './layout';
 
+export * from './grid';
+
+export * from './flex';
+
 export * from './button';
 
 export * from './separator';
