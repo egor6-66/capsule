@@ -42,8 +42,8 @@ describe('check — allowed imports (no violations)', () => {
     expect(check(FEATURE_PATH, "import { loginApi } from '@app/api/auth';")).toEqual([]);
   });
 
-  it('widget importing @capsuletech/ui → ok', () => {
-    expect(check(WIDGET_PATH, "import { Card } from '@capsuletech/ui';")).toEqual([]);
+  it('widget importing @capsuletech/web-ui → ok', () => {
+    expect(check(WIDGET_PATH, "import { Card } from '@capsuletech/web-ui';")).toEqual([]);
   });
 
   it('relative imports are always allowed (intra-group)', () => {
