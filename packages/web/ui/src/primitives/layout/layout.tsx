@@ -1,8 +1,8 @@
 import { createStyle } from '@capsuletech/web-style';
 import { splitProps } from 'solid-js';
-import { Grid } from './grid';
 import type { ILayoutProps } from './interfaces';
 import { slot } from './slot';
+import { LayoutSwitch } from './switch';
 import { layoutCva } from './variants';
 
 const LayoutImpl = (props: ILayoutProps) => {
@@ -16,7 +16,7 @@ const LayoutImpl = (props: ILayoutProps) => {
 
   return (
     <div ref={local.ref} class={className()} style={style()}>
-      <Grid {...(props as ILayoutProps)} />
+      <LayoutSwitch {...(props as ILayoutProps)} />
     </div>
   );
 };

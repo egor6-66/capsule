@@ -33,7 +33,15 @@ const animateMain = (
   return <Animate variant={variant}>{content}</Animate>;
 };
 
-export const Grid = (props: ILayoutProps) => {
+/**
+ * LayoutSwitch — внутренний switch по `variant`, рендерит конкретную раскладку
+ * (`centroid` / `standard` / `dashboard` / `holy-grail`). **Не путать** с
+ * публичным `<Grid>`-primitive в `primitives/grid/` — тот про CSS Grid как
+ * standalone-компонент, этот — приватный диспетчер вариантов Layout.
+ *
+ * Переименован из `Grid`, чтобы освободить имя для публичного primitive.
+ */
+export const LayoutSwitch = (props: ILayoutProps) => {
   // Soft-dep на роутер: useContext напрямую (без useRouter, чтобы не бросало
   // если Layout рендерится вне RouterContext, например в Storybook).
   const router = useContext(RouterContext);
@@ -78,7 +86,44 @@ export const Grid = (props: ILayoutProps) => {
         />
       </Match>
 
-      {/* TODO: holy-grail */}
+      {/* holy-grail — CSS Grid с named areas */}
+      <Match when={props.variant === 'holy-grail'}>
+        {(() => {
+          const s = props.slots as LayoutSlotMap['holy-grail'];
+          const header = normalizeSlot(s.header)!;
+          const left = normalizeSlot(s.left)!;
+          const main = normalizeSlot(s.main)!;
+          const right = normalizeSlot(s.right)!;
+          const footer = normalizeSlot(s.footer)!;
+          // grid-template-areas заданы inline-стилем, чтобы не зависеть от
+          // Tailwind underscore→space-конверсии в произвольных значениях.
+          return (
+            <div
+              class={layoutSlots.holyGrailGrid}
+              style={{
+                'grid-template-areas':
+                  "'header header header' 'left main right' 'footer footer footer'",
+              }}
+            >
+              <header class={layoutSlots.header} style={{ 'grid-area': 'header' }}>
+                {header.children}
+              </header>
+              <aside class={layoutSlots.holyGrailLeft} style={{ 'grid-area': 'left' }}>
+                {left.children}
+              </aside>
+              <main class={layoutSlots.main} style={{ 'grid-area': 'main' }}>
+                {animateMain(main.children, props.animated, router)}
+              </main>
+              <aside class={layoutSlots.holyGrailRight} style={{ 'grid-area': 'right' }}>
+                {right.children}
+              </aside>
+              <footer class={layoutSlots.footer} style={{ 'grid-area': 'footer' }}>
+                {footer.children}
+              </footer>
+            </div>
+          );
+        })()}
+      </Match>
     </Switch>
   );
 };

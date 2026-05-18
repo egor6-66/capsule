@@ -18,13 +18,25 @@ export const layoutSlots = {
   resizeMain: 'h-full w-full overflow-auto',
   resizeAsideRight:
     'h-full w-full overflow-auto border-l bg-muted/40 p-[--layout-padding]',
+  /**
+   * Holy-grail wrapper — CSS Grid с tracks `auto / 1fr / auto` по обеим осям.
+   * `grid-template-areas` задаётся inline-стилем в `switch.tsx`.
+   */
+  holyGrailGrid:
+    'grid h-full w-full grid-cols-[auto_1fr_auto] grid-rows-[auto_1fr_auto] overflow-hidden',
+  holyGrailLeft:
+    'w-64 overflow-auto border-r bg-muted/40 p-[--component-padding]',
+  holyGrailRight:
+    'w-80 overflow-auto border-l bg-muted/40 p-[--layout-padding]',
 };
 
 export const variants = {
   variant: {
     standard: 'flex flex-col',
     dashboard: 'flex h-screen overflow-hidden',
-    'holy-grail': 'flex flex-col',
+    // holy-grail сам внутри рендерит CSS-Grid wrapper с `h-full w-full` —
+    // здесь outer должен быть просто block, чтобы дочерний grid занял всю площадь.
+    'holy-grail': 'block',
     centroid: 'flex items-center justify-center',
   },
 };

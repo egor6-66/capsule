@@ -10,6 +10,12 @@ import {
 } from '../../_mocks';
 import { Resizable } from './resizable';
 
+/**
+ * Stories построены через `render: (args) => …`, потому что Solid JSX-ноды,
+ * положенные напрямую в `args.items[].children`, не переживают сериализацию
+ * postMessage между Storybook manager и preview iframe — на preview-стороне
+ * приходит `{}`, и Resizable рендерит пустые панели.
+ */
 const meta = {
   title: 'Wrappers/Resizable',
   component: Resizable,
@@ -25,7 +31,7 @@ const meta = {
   decorators: [
     (Story) => (
       <div class="h-[520px] w-full border border-dashed border-white/15 overflow-hidden">
-        {Story()}
+        <Story />
       </div>
     ),
   ],
@@ -36,72 +42,90 @@ type Story = StoryObj<typeof meta>;
 
 export const Horizontal: Story = {
   name: 'horizontal · sidebar + main',
-  args: {
-    items: [
-      { children: <MockSidebar />, resizable: true, initialSize: 0.25, minSize: 0.15 },
-      { children: <MockMain />, resizable: true },
-    ],
-  },
+  render: (args) => (
+    <Resizable
+      {...args}
+      items={[
+        { children: <MockSidebar />, resizable: true, initialSize: 0.25, minSize: 0.15 },
+        { children: <MockMain />, resizable: true },
+      ]}
+    />
+  ),
 };
 
 export const Vertical: Story = {
   name: 'vertical · header + main',
-  args: {
-    orientation: 'vertical',
-    items: [
-      { children: <MockHeader />, resizable: true, initialSize: 0.15, minSize: 0.08 },
-      { children: <MockMain />, resizable: true },
-    ],
-  },
+  args: { orientation: 'vertical' },
+  render: (args) => (
+    <Resizable
+      {...args}
+      items={[
+        { children: <MockHeader />, resizable: true, initialSize: 0.15, minSize: 0.08 },
+        { children: <MockMain />, resizable: true },
+      ]}
+    />
+  ),
 };
 
 export const ThreePanels: Story = {
   name: 'horizontal · sidebar + main + inspector',
-  args: {
-    items: [
-      { children: <MockSidebar />, resizable: true, initialSize: 0.22, minSize: 0.12 },
-      { children: <MockMain />, resizable: true },
-      { children: <MockRightBar />, resizable: true, initialSize: 0.22, minSize: 0.15 },
-    ],
-  },
+  render: (args) => (
+    <Resizable
+      {...args}
+      items={[
+        { children: <MockSidebar />, resizable: true, initialSize: 0.22, minSize: 0.12 },
+        { children: <MockMain />, resizable: true },
+        { children: <MockRightBar />, resizable: true, initialSize: 0.22, minSize: 0.15 },
+      ]}
+    />
+  ),
 };
 
 export const FixedRightPanel: Story = {
   name: 'fixed inspector · resizable:false',
-  args: {
-    items: [
-      { children: <MockSidebar />, resizable: true, initialSize: 0.22 },
-      { children: <MockMain />, resizable: true },
-      { children: <MockRightBar />, resizable: false, initialSize: 0.22 },
-    ],
-  },
+  render: (args) => (
+    <Resizable
+      {...args}
+      items={[
+        { children: <MockSidebar />, resizable: true, initialSize: 0.22 },
+        { children: <MockMain />, resizable: true },
+        { children: <MockRightBar />, resizable: false, initialSize: 0.22 },
+      ]}
+    />
+  ),
 };
 
 export const WithMinMaxConstraints: Story = {
   name: 'min/max constraints',
-  args: {
-    items: [
-      {
-        children: <MockBlock label="20–40%" tone="b" />,
-        resizable: true,
-        initialSize: 0.3,
-        minSize: 0.2,
-        maxSize: 0.4,
-      },
-      { children: <MockBlock label="flex" />, resizable: true },
-    ],
-  },
+  render: (args) => (
+    <Resizable
+      {...args}
+      items={[
+        {
+          children: <MockBlock label="20–40%" tone="b" />,
+          resizable: true,
+          initialSize: 0.3,
+          minSize: 0.2,
+          maxSize: 0.4,
+        },
+        { children: <MockBlock label="flex" />, resizable: true },
+      ]}
+    />
+  ),
 };
 
 export const NoGripHandle: Story = {
   name: 'no grip · withHandle:false',
-  args: {
-    withHandle: false,
-    items: [
-      { children: <MockBlock label="left" tone="a" />, resizable: true, initialSize: 0.4 },
-      { children: <MockBlock label="right" tone="c" />, resizable: true },
-    ],
-  },
+  args: { withHandle: false },
+  render: (args) => (
+    <Resizable
+      {...args}
+      items={[
+        { children: <MockBlock label="left" tone="a" />, resizable: true, initialSize: 0.4 },
+        { children: <MockBlock label="right" tone="c" />, resizable: true },
+      ]}
+    />
+  ),
 };
 
 /**
