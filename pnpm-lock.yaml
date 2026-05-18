@@ -334,9 +334,6 @@ importers:
       '@capsuletech/compliance':
         specifier: workspace:*
         version: link:../builders/compliance
-      '@capsuletech/shared-file-manager':
-        specifier: workspace:*
-        version: link:../shared/file-manager
       '@capsuletech/vite-builder':
         specifier: workspace:*
         version: link:../builders/vite
