@@ -12,11 +12,11 @@ audience: claude
 
 ## TL;DR
 
-`@capsuletech/web-profiler` — performance-мониторинг для Solid-приложений на collector-pattern. Типизированный `MetricsBus` собирает данные из подключённых коллекторов и раздаёт их (а) виджет-Dashboard'у, (б) reporters'ам (console / sendBeacon / callback), (в) user-коду через `useProfiler()` / `usePerf()`.
+`@capsuletech/web-profiler` — performance-мониторинг для Solid-приложений на collector-pattern. Типизированный `MetricsBus` собирает данные из подключённых коллекторов и раздаёт их (а) виджет-Dashboard'у (kobalte Tabs, draggable, sparklines), (б) reporters'ам (console / sendBeacon / callback), (в) user-коду через `useProfiler()` / `usePerf()`.
 
-С Phase 2b — 13 встроенных collector'ов: Web Vitals (CLS/FCP/INP/LCP/TTFB), memory, network (transfer/decoded/inflight/failed), navigation, connection, longTasks, loaf, eventTiming, fps, domStats, errors, userTiming, networkDeep (последний — opt-in, monkey-patch). Подключается через `<ProfilerProvider>` (новый API) или `<VitalsMonitoringProvider>` (legacy shim, всё ещё работает через `BaseProviders.vitals`).
+С Phase 2c — 13 встроенных collector'ов, 3 reporters, новый Dashboard (`ProfilerDashboard`) с 5 вкладками (Vitals / Runtime / Network / Errors / Custom), draggable + collapsible + localStorage persistence. Подключается через `<ProfilerProvider showDashboard>` либо через `<BaseProviders vitals>` (legacy путь — теперь тоже показывает новый Dashboard).
 
-Контракт «снаружи»: либо `<ProfilerProvider>` оборачивает app → метрики капают в bus → `useProfiler()` отдаёт типизированный bus → `usePerf()` — обёртка с `mark/measure/count/gauge/time`. Либо legacy `<VitalsMonitoringProvider>` → 5 legacy-коллекторов + старый Dashboard. Никаких breaking changes.
+Контракт «снаружи»: `<ProfilerProvider collectors="all-except-deep" reporters={[...]} showDashboard>` оборачивает app → метрики капают в bus → `useProfiler()` отдаёт типизированный bus → `usePerf()` — обёртка с `mark/measure/count/gauge/time`. Legacy `<VitalsMonitoringProvider>` остаётся как deprecated shim. Ноль breaking changes для существующих consumers.
 
 ## Где что лежит
 
@@ -67,13 +67,23 @@ audience: claude
 | `api/usePerf.ts` | `createPerfApi(bus)` → `{ mark, measure, count, gauge, time }`. `usePerf()` = `createPerfApi(useProfiler())`. `count` хранит running total в локальном Map, пишет в bus как counter. `time(name)` возвращает `{ end() }` через `performance.now`/`Date.now` fallback. `mark`/`measure` — no-throw обёртки над Performance API (захватываются `userTimingCollector`'ом). |
 | `api/index.ts` | Barrel. |
 
-### Legacy + UI
+### Widget (Phase 2c)
 | Файл | Что |
 |---|---|
-| `providers/vitalsMonitor.tsx` | `VitalsMonitoringProvider` = `<ProfilerProvider collectors="legacy">` + `LegacyVitalsBridge` (подписывается на bus, проецирует на legacy display-keys для старого Dashboard, экспонирует `IMonitoringContextType.updateComponentMetric` через `VitalsMonitoringContext`). Все символы — `@deprecated`. |
+| `widget/dashboard.tsx` | `ProfilerDashboard` — корневой draggable виджет. Kobalte `<Tabs>` с 5 вкладками. Persistence активной вкладки через `localStorage`. |
+| `widget/primitives/window.tsx` | `ProfilerWindow` — draggable + collapsible контейнер с pointer-event handlers, viewport clamp на `resize`. `localStorage` key `capsule:profiler:dashboard` хранит `{x,y,collapsed,tab}`. Заголовок — drag handle (`data-profiler-drag-handle="true"`). Кнопка `▾/▸` для свёртки. |
+| `widget/primitives/sparkline.tsx` | `Sparkline` — SVG-полилиния из `bus.history(id)` (ring-buffer). Reactive через `createMemo`. Min 2 точки. Auto-scale. |
+| `widget/primitives/row.tsx` | `MetricRow id={IMetricId}` — `bus.read` + `bus.history` + `getRating`. Цвет числа = rating.color. Sparkline можно отключить `showSparkline={false}`. |
+| `widget/panels/{vitals,runtime,network,errors,custom}.tsx` | 5 панелей. `custom.tsx` — реактивно слушает bus, фильтрует `id.startsWith('custom.')`, рендерит каждую как row. |
+| `widget/index.ts` | Barrel. |
+
+### Legacy + utils
+| Файл | Что |
+|---|---|
+| `providers/vitalsMonitor.tsx` | `VitalsMonitoringProvider` = `<ProfilerProvider collectors="legacy" showDashboard>` + `LegacyVitalsBridge` (просто экспонирует `IMonitoringContextType.updateComponentMetric` через `VitalsMonitoringContext`). Все символы — `@deprecated`. С 2c больше НЕ проецирует на display-keys и НЕ рендерит legacy Dashboard — новый Dashboard приходит через `ProfilerProvider.showDashboard`. |
 | `providers/index.ts` | Barrel: `ProfilerProvider` + legacy `VitalsMonitoringProvider` / `useVitalsContext` / `VitalsMonitoringContext` / `IMonitoringContextType`. |
-| `components/dashboard.tsx` | Старый overlay. Принимает `Record<string, number\|string>`. `pointer-events: none`, hardcoded colors — будет переписан в Phase 2c. |
-| `utils.ts` | Все helpers (`setupWebVitalsTracking`, `getRating` legacy, ...) — `@deprecated`/`@internal`. Используются только legacy Dashboard. |
+| `components/dashboard.tsx` | Legacy overlay. **Никем не используется автоматически.** Доступен через `@capsuletech/web-profiler/components` для тех кто рендерит руками с `Record<string, number\|string>` prop'ом. Удалить в 0.2.x. |
+| `utils.ts` | Все helpers (`setupWebVitalsTracking`, `getRating` legacy, ...) — `@deprecated`/`@internal`. Используются только legacy `components/dashboard.tsx`. |
 
 ### Конфиг + тесты
 | Файл | Что |
@@ -116,6 +126,7 @@ interface IProfilerProviderProps {
   reporters?: IReporter[];
   bus?: IMetricsBus;                     // inject (e.g. tests)
   historySize?: number;                  // default 60
+  showDashboard?: boolean;               // default false; renders <ProfilerDashboard /> as sibling
 }
 
 function ProfilerProvider(props): JSX.Element;
@@ -249,12 +260,19 @@ Provider использует `onMount` (с Phase 2a, до этого был `cr
 - ✅ **`web-vitals` opt-out** — `webVitalsCollector({ reportAllChanges: false })` даёт final-only. Live vs analytics — теперь раздельные каналы.
 - ✅ **Collector cleanup в `try/catch`** — один битый cleanup не валит дерево при unmount.
 
-### Остаётся (Phase 2c)
-- **`BaseProviders.vitals` — boolean без проброса.** `showDashboard` хардкодом `true`. Тонкая настройка — только прямой импорт `VitalsMonitoringProvider` или новый `ProfilerProvider`.
-- **Никакой связи с HCA-слоями.** Profiler не подключён к `data-meta`, нет `services.profiler` инжекта в Feature. Можно сделать через web-core в отдельной задаче.
-- **Dashboard всё ещё legacy** — `pointer-events: none`, inline-стили, hardcoded colors. Phase 2c — переписать на draggable/tabbed + sparklines из `bus.history(id)` ring-buffer'а.
-- **`dom.listeners` не реализован** — требует monkey-patch `addEventListener` (как `networkDeep`). Рассмотреть в Phase 2c или 3.
-- **`networkDeep` — monkey-patch globals**, потенциальный конфликт с другими SDK что патчат fetch/XHR (sentry, datadog). Opt-in. Документировать в user-doc'е если кто-то жалуется.
+### Закрыто в Phase 2c (2026-05-18)
+- ✅ **Dashboard переписан.** `widget/dashboard.tsx` через kobalte Tabs (Vitals / Runtime / Network / Errors / Custom). Draggable + collapsible window с localStorage persistence (`capsule:profiler:dashboard` хранит `{x,y,collapsed,tab}`). Sparklines из ring-buffer истории. `pointer-events` НЕ disabled — можно кликать, drag за заголовок.
+- ✅ **`BaseProviders.showDashboard`** — пробрасывается до `VitalsMonitoringProvider` → `ProfilerProvider`. Default true когда `vitals=true`. Тонкая настройка: `<BaseProviders vitals showDashboard={false}>` или прямой `<ProfilerProvider>`.
+- ✅ **Legacy Dashboard больше не автоматический.** `VitalsMonitoringProvider` рендерит новый Dashboard через `ProfilerProvider.showDashboard`. Старый `components/dashboard.tsx` остаётся доступным через subpath `./components` для manual rendering.
+
+### Остаётся (Phase 3+ / 0.2.x)
+- **`dom.listeners` не реализован** — требует monkey-patch `addEventListener` (как `networkDeep`). Рассмотреть отдельной задачей.
+- **`networkDeep` — monkey-patch globals**, потенциальный конфликт с другими SDK что патчат fetch/XHR (Sentry, Datadog, GTM). Opt-in. Задокументирован в user-doc.
+- **Никакой связи с HCA-слоями.** Profiler не подключён к `data-meta`, нет `services.profiler` инжекта в Feature. Сделать отдельной задачей через web-core (расширить `createLogicWrapper` чтобы инжектил `useProfilerSafe()`).
+- **Legacy `components/dashboard.tsx` + `utils.ts`** — удалить в 0.2.x. Сейчас оставлены для zero-breaking compat.
+- **`MetricRow` использует `useProfiler()` напрямую** — каждая row подписана на `bus.read`/`bus.history` через `createMemo`/`bus.subscribe` (Solid коллапсирует реакции). Если станет тяжело при высокочастотных метриках — мемоизировать через `createResource` или вынести в shared store. Пока ок.
+- **Sparkline без axis-labels** — minimalist, только полилиния. Кнопка zoom/timewindow — на будущее.
+- **`ProfilerWindow` drag clamp'ает на viewport-resize**, но не на initial mount если localStorage хранит `x/y` за пределами текущего viewport. Edge-case, минорно.
 
 ## Roadmap
 
@@ -273,12 +291,18 @@ Provider использует `onMount` (с Phase 2a, до этого был `cr
 - Move `_ssr.ts` → `core/env.ts` (shared между collectors и reporters).
 - 29 vitest-тестов: bus(9)/ratings(5)/ringBuffer(4)/perfApi(6)/reporters(5) — все зелёные.
 
-**Фаза 2c ⏳.** Dashboard rewrite:
-- `widget/dashboard.tsx` — draggable / collapsible / tabbed.
-- `widget/panels/{vitals,runtime,network,errors,custom}.tsx`.
-- `widget/primitives/{window,tabs,sparkline,gauge,bar}.tsx` — интеграция с [[style|@capsuletech/web-style]].
-- Persistence (позиция/свёрнутость) в localStorage.
-- `BaseProviders.vitals` — оставляем boolean; `showDashboard` proxy — отдельная мини-задача после 2c.
+**Фаза 2c ✅ (2026-05-18).** Dashboard rewrite:
+- `widget/dashboard.tsx` — kobalte Tabs (Vitals / Runtime / Network / Errors / Custom).
+- `widget/primitives/window.tsx` — draggable + collapsible с localStorage persistence (`capsule:profiler:dashboard`).
+- `widget/primitives/sparkline.tsx` — SVG-полилиния из ring-buffer истории.
+- `widget/primitives/row.tsx` — реактивная строка метрики (label + sparkline + value + rating-color).
+- `widget/panels/{vitals,runtime,network,errors,custom}.tsx` — 5 панелей. CustomPanel реактивно подписывается на bus и фильтрует `custom.*`.
+- `ProfilerProvider.showDashboard` prop — рендерит `<ProfilerDashboard />` как sibling детей.
+- `BaseProviders.showDashboard` prop (web-core) — пробрасывается до `VitalsMonitoringProvider`.
+- `VitalsMonitoringProvider` теперь use `ProfilerProvider showDashboard` — больше не рендерит legacy Dashboard. LegacyVitalsBridge ужал до простого `IMonitoringContextType` proxy.
+- `@kobalte/core` добавлен в peerDependencies.
+
+**Phase 3 / 0.2.x — потенциально.** Удалить deprecated (`components/dashboard.tsx`, `utils.ts`, `VitalsMonitoringProvider`); HCA-интеграция (`services.profiler` инжект); `dom.listeners` monkey-patch.
 
 ## Чек-листы
 

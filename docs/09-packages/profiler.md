@@ -254,16 +254,51 @@ Monkey-patches `fetch`, `XMLHttpRequest.prototype.send`, `WebSocket`. Счита
 
 ## Dashboard
 
-Текущий Dashboard — legacy: фиксированный `position: fixed; pointer-events: none;`, inline-стили. Показывается через legacy `VitalsMonitoringProvider`/`BaseProviders vitals`. Phase 2c — переписать на draggable / collapsible / tabbed виджет с sparkline'ами поверх `bus.history(id)`.
+Встроенный виджет с 5 вкладками (Vitals / Runtime / Network / Errors / Custom), draggable, collapsible. Sparkline'ы из ring-buffer истории. Позиция, свёрнутость и активная вкладка сохраняются в `localStorage` под ключом `capsule:profiler:dashboard`.
 
-Если нужен полностью свой UI прямо сейчас — используй `useProfiler()` и собирай view сам, без подключения legacy провайдера:
+Включается через `showDashboard`:
 
 ```tsx
-<ProfilerProvider>
+<ProfilerProvider showDashboard collectors="all-except-deep">
   <YourApp />
-  <YourCustomDashboard />   {/* читает через useProfiler() */}
 </ProfilerProvider>
 ```
+
+Через `BaseProviders` — тоже:
+
+```tsx
+<BaseProviders vitals>             {/* showDashboard default = true */}
+<BaseProviders vitals showDashboard={false}>   {/* метрики без UI */}
+```
+
+Реализация на `@kobalte/core` (Tabs), inline-стили. Зависит от `@kobalte/core` через peerDependencies — все Capsule-app'ы уже его тащат через `@capsuletech/web-ui`. Если ставишь профайлер в чужой проект — добавь `@kobalte/core@^0.13` в свои зависимости.
+
+### Свой UI вместо встроенного
+
+Если нужен полностью свой Dashboard — не передавай `showDashboard`, и собирай через `useProfiler()` либо примитивы из `@capsuletech/web-profiler` main entry:
+
+```tsx
+import { useProfiler } from '@capsuletech/web-profiler/api';
+import { MetricRow, Sparkline } from '@capsuletech/web-profiler';
+
+function MyDashboard() {
+  const bus = useProfiler();
+  return (
+    <div>
+      <MetricRow id="fps" />
+      <MetricRow id="memory" showSparkline={false} />
+      <Sparkline samples={() => bus.history('lcp')} width={120} height={30} />
+    </div>
+  );
+}
+```
+
+Доступные примитивы из `widget/`:
+- `ProfilerDashboard` — корневой виджет
+- `ProfilerWindow` — draggable контейнер
+- `MetricRow` — строка метрики
+- `Sparkline` — SVG-полилиния
+- `VitalsPanel` / `RuntimePanel` / `NetworkPanel` / `ErrorsPanel` / `CustomPanel`
 
 ## SSR
 
@@ -285,7 +320,8 @@ Monkey-patches `fetch`, `XMLHttpRequest.prototype.send`, `WebSocket`. Счита
 - **Phase 1 ✅** docs + AI-anchor
 - **Phase 2a ✅** core + 5 collectors
 - **Phase 2b ✅** 8 новых collectors + reporters + ProfilerProvider + useProfiler/usePerf
-- **Phase 2c ⏳** Dashboard rewrite (draggable / tabbed / sparklines, интеграция с `@capsuletech/web-style`)
+- **Phase 2c ✅** Dashboard rewrite (draggable + tabbed + sparklines, kobalte Tabs, localStorage persistence)
+- **Phase 3 / 0.2.x ⏳** удаление deprecated (`VitalsMonitoringProvider`, `components/dashboard.tsx`, `utils.ts`); HCA-интеграция (`services.profiler` инжект в Feature); `dom.listeners` monkey-patch.
 
 Подробности — [[../_meta/profiler#Roadmap]].
 

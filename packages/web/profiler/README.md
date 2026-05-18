@@ -85,11 +85,23 @@ Web Vitals (`lcp`/`fcp`/`cls`/`inp`/`ttfb`), runtime (`memory`/`fps`/`dom.nodes`
 
 Each numeric metric is rated via `getRating(id, value)` (Web Vitals thresholds + inverse rating for `fps`).
 
+## Dashboard
+
+Enable with `showDashboard`:
+
+```tsx
+<ProfilerProvider showDashboard collectors="all-except-deep">
+  <YourApp />
+</ProfilerProvider>
+```
+
+Draggable, collapsible, 5 tabs (Vitals / Runtime / Network / Errors / Custom), sparklines from ring-buffer history. Position, collapsed state, and active tab persist to `localStorage` under `capsule:profiler:dashboard`. Built on `@kobalte/core` Tabs (peer dependency).
+
 ## Known limitations
 
 - `dom.listeners` not implemented (would require monkey-patch of `addEventListener`)
-- Legacy Dashboard is `position: fixed; pointer-events: none` — Phase 2c will rewrite it (draggable / collapsible / tabbed)
 - `networkDeep` monkey-patches `fetch`/`XHR`/`WebSocket` — opt-in; may conflict with other patching SDKs (Sentry, Datadog, GTM)
+- Legacy `components/dashboard.tsx` and `utils.ts` kept for backward compat; will be removed in 0.2.x
 
 See `docs/_meta/profiler.md` for the full gotcha list, file:line refs, and roadmap.
 

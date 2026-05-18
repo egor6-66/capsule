@@ -1,4 +1,4 @@
-import { type JSX, onCleanup, onMount } from 'solid-js';
+import { type JSX, Show, onCleanup, onMount } from 'solid-js';
 import { ProfilerContext } from '../api/useProfiler';
 import {
   connectionCollector,
@@ -17,6 +17,7 @@ import {
 } from '../collectors';
 import { createMetricsBus } from '../core/bus';
 import type { ICollector, IMetricsBus, IReporter } from '../core/schema';
+import { ProfilerDashboard } from '../widget';
 
 export type IProfilerCollectorsOpt = 'all' | 'all-except-deep' | 'legacy' | ICollector[];
 
@@ -26,6 +27,7 @@ export interface IProfilerProviderProps {
   reporters?: IReporter[];
   bus?: IMetricsBus;
   historySize?: number;
+  showDashboard?: boolean;
 }
 
 function legacyCollectors(): ICollector[] {
@@ -82,5 +84,12 @@ export function ProfilerProvider(props: IProfilerProviderProps) {
     });
   });
 
-  return <ProfilerContext.Provider value={bus}>{props.children}</ProfilerContext.Provider>;
+  return (
+    <ProfilerContext.Provider value={bus}>
+      {props.children}
+      <Show when={props.showDashboard}>
+        <ProfilerDashboard />
+      </Show>
+    </ProfilerContext.Provider>
+  );
 }
