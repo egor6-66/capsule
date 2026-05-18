@@ -644,8 +644,8 @@ importers:
         specifier: ^1.46.0
         version: 1.46.1
       lucide-solid:
-        specifier: ^0.460.0
-        version: 0.460.0(solid-js@1.9.12)
+        specifier: ^1.16.0
+        version: 1.16.0(solid-js@1.9.12)
       solid-js:
         specifier: ^1.9.0
         version: 1.9.12
@@ -11212,7 +11212,7 @@ snapshots:
 
   lru-cache@7.18.3: {}
 
-  lucide-solid@0.460.0(solid-js@1.9.12):
+  lucide-solid@1.16.0(solid-js@1.9.12):
     dependencies:
       solid-js: 1.9.12
 
