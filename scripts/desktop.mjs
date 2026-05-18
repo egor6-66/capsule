@@ -23,8 +23,8 @@
  * ==========================================================================*/
 
 import { spawn } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { resolve, join } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -120,6 +120,28 @@ const explicitBundles = action === 'build' && process.platform === 'win32'
 mkdirSync(desktopDir, { recursive: true });
 writeFileSync(overridePath, JSON.stringify(baseOverride, null, 2));
 
+// ─── cleanup handler ─────────────────────────────────────────────────────────
+// Override-файл нужен только пока tauri-процесс жив — после exit он бесполезен,
+// а оставаясь на диске мешает (мусор в git status, путаница если кто-то правит
+// его руками не подозревая что он temp). Снимаем на любом пути выхода:
+//   - нормальный exit child'а;
+//   - наш SIGINT/SIGTERM (Ctrl-C);
+//   - uncaughtException;
+//   - `process.exit` от других путей (fallback через 'exit' hook).
+// Идемпотентно: existsSync-проверка + try/catch если файл уже снят.
+
+let cleanedUp = false;
+const cleanupOverride = () => {
+  if (cleanedUp) return;
+  cleanedUp = true;
+  if (!existsSync(overridePath)) return;
+  try {
+    unlinkSync(overridePath);
+  } catch (err) {
+    console.warn(`[desktop] failed to remove ${overridePath}:`, err);
+  }
+};
+
 // ─── invoke tauri ────────────────────────────────────────────────────────────
 
 const tauriArgs = [
@@ -140,12 +162,20 @@ const child = spawn('pnpm', ['exec', 'tauri', ...tauriArgs], {
 });
 
 child.on('exit', (code, signal) => {
+  cleanupOverride();
   if (signal) process.kill(process.pid, signal);
   else process.exit(code ?? 0);
 });
 
 const forward = (sig) => () => {
+  cleanupOverride();
   if (!child.killed) child.kill(sig);
 };
 process.on('SIGINT', forward('SIGINT'));
 process.on('SIGTERM', forward('SIGTERM'));
+process.on('exit', cleanupOverride);
+process.on('uncaughtException', (err) => {
+  cleanupOverride();
+  console.error('[desktop] uncaught:', err);
+  process.exit(1);
+});
