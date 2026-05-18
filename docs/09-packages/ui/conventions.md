@@ -136,27 +136,37 @@ const { className, style } = createStyle(buttonCva, {
 
 Пример: Card с Card.Header, Card.Title, Card.Content, Card.Footer.
 
-**Паттерн:**
+**Паттерн** (рекомендованный — статика рядом с компонентом):
 1. Создай parts в отдельном `parts.tsx`:
    ```tsx
    export const CardHeader = (props) => <div class="p-4 border-b" {...props} />;
    export const CardTitle = (props) => <Typography as="h3" {...props} />;
    // ...
    ```
-2. В основном `card.tsx` собери их в base:
+2. В основном `card.tsx` сразу собери их в base через `Object.assign`:
    ```tsx
-   export const Card = (props) => <div class="rounded-lg border bg-card" {...props} />;
-   
-   // Object.assign — стандарт для compound-паттерна
-   Object.assign(Card, { Header: CardHeader, Title: CardTitle, Content: CardContent, Footer: CardFooter });
+   import { CardContent, CardFooter, CardHeader, CardTitle } from './parts';
+
+   const CardImpl = (props) => <div class="rounded-lg border bg-card" {...props} />;
+   export const Card = Object.assign(CardImpl, {
+     Header: CardHeader,
+     Title: CardTitle,
+     Content: CardContent,
+     Footer: CardFooter,
+   });
    ```
-3. В `index.ts`:
+3. В `index.ts` — просто реэкспорт:
    ```tsx
    export { Card } from './card';
    export type * as ICard from './interfaces';
    ```
 
 Пользователь пишет: `<Card><Card.Header>...</Card.Header></Card>`.
+
+> [!warning] Gotcha: импорт compound только из barrel'я
+> **Не** собирай compound в `index.ts` через дополнительный `Object.assign` после реэкспорта. Если статика добавляется *только* в barrel'е (`./index.ts`), импорт `from './card'` (а не `from '.'`) даст голый `CardImpl` без `.Header` / `.Title` — и `<Card.Header>` сломается с `Cannot read properties of undefined (reading 'name')`.
+>
+> Решение: всегда собирай статику в основном файле (как `Layout` в `layout.tsx` через `Object.assign(LayoutImpl, { slot })`) — тогда importable откуда угодно. Если по историческим причинам статика всё-таки в `index.ts` (как сейчас у Card / Field / Navigation), импортируй именно из barrel'я: `import { Card } from '.'`.
 
 ## Чек-лист: готов ли primitive
 
