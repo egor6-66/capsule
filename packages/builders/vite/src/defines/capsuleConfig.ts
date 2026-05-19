@@ -81,7 +81,6 @@ export const capsuleConfig = ({ config, root, workspaceRoot, isDev }: IProps) =>
       // Благодаря этому Vite будет обрабатывать их на лету через плагины
       // (включая JSX транспиляцию).
       exclude: [
-        '@capsuletech/sandbox',
         '@capsuletech/web-core',
         '@capsuletech/web-dnd',
         '@capsuletech/web-editor',
