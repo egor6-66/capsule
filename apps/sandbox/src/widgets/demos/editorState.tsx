@@ -1,16 +1,22 @@
-import { DnDProvider, DragOverlay, createDraggable, createDroppable, useDnD } from '@capsuletech/dnd';
 import {
-  EditorOpError,
-  type IEditorTree,
-  type NodeId,
+  createDraggable,
+  createDroppable,
+  DnDProvider,
+  DragOverlay,
+  useDnD,
+} from '@capsuletech/dnd';
+import {
   addNode,
   createEmptyTree,
+  EditorOpError,
+  type IEditorTree,
   moveNode,
+  type NodeId,
   removeNode,
 } from '@capsuletech/editor-state';
-import { canAcceptChild, getAllManifests, getManifest } from '@capsuletech/web-manifests';
 import { type ISchema, Renderer } from '@capsuletech/renderer';
-import { For, Show, createMemo, createSignal } from 'solid-js';
+import { canAcceptChild, getAllManifests, getManifest } from '@capsuletech/web-manifests';
+import { createMemo, createSignal, For, Show } from 'solid-js';
 
 type PaletteDrag = { source: 'palette'; type: string; label: string };
 type TreeDrag = { source: 'tree'; nodeId: NodeId; type: string };
@@ -188,6 +194,7 @@ const TreeRow = (props: ITreeRowProps) => {
       }}
     >
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: drag-based tree row, keyboard sensor — отдельная задача в @capsuletech/dnd */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: drag-based tree row, keyboard sensor — отдельная задача в @capsuletech/dnd */}
       <div
         ref={headerRefSet}
         data-tree-header
@@ -261,6 +268,7 @@ const PaletteItem = (props: IPaletteItemProps) => {
     return canAcceptChild(t, props.type);
   });
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: drag palette item — pointer-only interaction, keyboard accessibility tracked in @capsuletech/dnd
     <div
       ref={drag.ref}
       class="px-2 py-1 border rounded text-sm cursor-grab select-none transition-colors"

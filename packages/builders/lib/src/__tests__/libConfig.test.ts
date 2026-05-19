@@ -21,7 +21,6 @@ type ExternalFn = (id: string, importer: string | undefined, isResolved: boolean
 
 const getExternalFn = (opts: Parameters<typeof libConfig>[0]): ExternalFn => {
   const cfg = libConfig(opts);
-  // biome-ignore lint/style/noNonNullAssertion: тест ожидает наличие
   const fn = cfg.build!.rollupOptions!.external as ExternalFn;
   expect(typeof fn).toBe('function');
   return fn;
@@ -49,11 +48,7 @@ describe('libConfig — external selector (browser runtime)', () => {
     expect(isExternal(id, undefined, false)).toBe(true);
   });
 
-  it.each([
-    './local-file',
-    '../helper',
-    '/abs/path',
-  ])('bundles relative/absolute path %s', (id) => {
+  it.each(['./local-file', '../helper', '/abs/path'])('bundles relative/absolute path %s', (id) => {
     expect(isExternal(id, undefined, false)).toBe(false);
   });
 

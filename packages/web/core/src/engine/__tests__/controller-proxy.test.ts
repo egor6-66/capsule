@@ -42,7 +42,6 @@ describe('ControllerProxy — system fields', () => {
     });
     expect(ctl.store).toBe(store);
   });
-
 });
 
 describe('ControllerProxy — method dispatch order', () => {
@@ -107,10 +106,8 @@ describe('ControllerProxy — method dispatch order', () => {
   it('auto-bubbles to parent when no handler anywhere', async () => {
     const parentHandler = vi.fn(async () => 'from-parent');
     const parent = {
-      // biome-ignore lint/suspicious/noExplicitAny: test stub
       controller: { onClick: parentHandler } as any,
       state: makeState('parent-state'),
-      // biome-ignore lint/suspicious/noExplicitAny: minimum stub
       store: {} as any,
     };
 
@@ -119,7 +116,6 @@ describe('ControllerProxy — method dispatch order', () => {
       state: makeState('idle'),
       send: vi.fn(),
       store: makeStore(),
-      // biome-ignore lint/suspicious/noExplicitAny: test stub
       parent: parent as any,
     });
 
@@ -297,7 +293,6 @@ describe('ControllerProxy — next() bubbling (passive)', () => {
       state: makeState('idle'),
       send: vi.fn(),
       store: makeStore(),
-      // biome-ignore lint/suspicious/noExplicitAny: test stub
       parent: { controller: { onClick: parentHandler } as any } as any,
     });
 
@@ -326,9 +321,7 @@ describe('ControllerProxy — next() bubbling (passive)', () => {
           onClick: async (t: ITarget) => {
             received = t;
           },
-          // biome-ignore lint/suspicious/noExplicitAny: stub
         } as any,
-        // biome-ignore lint/suspicious/noExplicitAny: stub
       } as any,
     });
 
@@ -358,9 +351,7 @@ describe('ControllerProxy — next() bubbling (passive)', () => {
           onClick: async (t: ITarget) => {
             received = t;
           },
-          // biome-ignore lint/suspicious/noExplicitAny: stub
         } as any,
-        // biome-ignore lint/suspicious/noExplicitAny: stub
       } as any,
     });
 
@@ -385,7 +376,6 @@ describe('ControllerProxy — next() bubbling (passive)', () => {
       state: makeState('idle'),
       send: vi.fn(),
       store: makeStore(),
-      // biome-ignore lint/suspicious/noExplicitAny: stub
       parent: { controller: { submit: parentSubmit } as any } as any,
       overrides: { onClick: 'submit' },
     });
@@ -408,7 +398,6 @@ describe('ControllerProxy — next() bubbling (passive)', () => {
       state: makeState('idle'),
       send: vi.fn(),
       store: makeStore(),
-      // biome-ignore lint/suspicious/noExplicitAny: stub
       parent: { controller: {} as any } as any,
     });
 
@@ -439,9 +428,7 @@ describe('ControllerProxy — next.with(arg) bubbling (explicit)', () => {
           onClick: async (t: ITarget) => {
             received = t;
           },
-          // biome-ignore lint/suspicious/noExplicitAny: stub
         } as any,
-        // biome-ignore lint/suspicious/noExplicitAny: stub
       } as any,
     });
 
@@ -474,9 +461,7 @@ describe('ControllerProxy — next.with(arg) bubbling (explicit)', () => {
           onClick: async (t: ITarget) => {
             received = t;
           },
-          // biome-ignore lint/suspicious/noExplicitAny: stub
         } as any,
-        // biome-ignore lint/suspicious/noExplicitAny: stub
       } as any,
     });
 
@@ -507,9 +492,7 @@ describe('ControllerProxy — next.with(arg) bubbling (explicit)', () => {
           onClick: async (t: ITarget) => {
             received = t;
           },
-          // biome-ignore lint/suspicious/noExplicitAny: stub
         } as any,
-        // biome-ignore lint/suspicious/noExplicitAny: stub
       } as any,
     });
 
@@ -532,7 +515,6 @@ describe('ControllerProxy — next.with(arg) bubbling (explicit)', () => {
       state: makeState('idle'),
       send: vi.fn(),
       store: makeStore(),
-      // biome-ignore lint/suspicious/noExplicitAny: stub
       parent: { controller: { submit: parentSubmit } as any } as any,
       overrides: { onClick: 'submit' },
     });
@@ -662,7 +644,13 @@ describe('ControllerProxy — schema.onError hook', () => {
   it('still re-throws original error even when onError absorbs it', async () => {
     const error = new Error('boom');
     const schema = makeSchema({
-      states: { idle: { onClick: () => { throw error; } } },
+      states: {
+        idle: {
+          onClick: () => {
+            throw error;
+          },
+        },
+      },
       onError: vi.fn(),
     });
     const ctl = ControllerProxy({
@@ -677,7 +665,13 @@ describe('ControllerProxy — schema.onError hook', () => {
   it('sync throw inside onError is logged but does not mask the original error', async () => {
     const original = new Error('original');
     const schema = makeSchema({
-      states: { idle: { onClick: () => { throw original; } } },
+      states: {
+        idle: {
+          onClick: () => {
+            throw original;
+          },
+        },
+      },
       onError: () => {
         throw new Error('onError-burst');
       },
@@ -699,7 +693,13 @@ describe('ControllerProxy — schema.onError hook', () => {
       throw new Error('onError-async-boom');
     });
     const schema = makeSchema({
-      states: { idle: { onClick: async () => { throw original; } } },
+      states: {
+        idle: {
+          onClick: async () => {
+            throw original;
+          },
+        },
+      },
       onError: onErrorAsync,
     });
     const ctl = ControllerProxy({

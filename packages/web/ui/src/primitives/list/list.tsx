@@ -47,7 +47,7 @@ function VirtualList<T>(props: IVirtualListProps<T>) {
     get count() {
       return local.items?.length ?? 0;
     },
-    // @ts-ignore
+    // @ts-expect-error
     getScrollElement: () => parentRef,
     estimateSize: () => local.estimateSize ?? 40,
     horizontal: variants.orientation === 'horizontal',
@@ -89,7 +89,6 @@ function VirtualList<T>(props: IVirtualListProps<T>) {
                     : `translateY(${virtualItem.start}px)`,
               }}
             >
-              {/* biome-ignore lint/style/noNonNullAssertion: <explanation> */}
               {local.children(local.items![virtualItem.index], () => virtualItem.index)}
             </div>
           )}
