@@ -1,18 +1,26 @@
-import { createSignal, Show } from 'solid-js';
+import { cn } from '@capsuletech/web-style';
+import { createSignal, createUniqueId, Show } from 'solid-js';
 import type { IToggleProps } from './interfaces';
+import { toggleLabelCva, toggleThumbCva, toggleTrackCva } from './variants';
 
 /**
- * Минимальный switch-style toggle. role=switch для accessibility,
- * data-checked атрибут для кастомных стилей через CSS-селекторы.
+ * Toggle — switch-style контрол. `role=switch` для accessibility,
+ * `data-checked` атрибут для стилизации через CSS-селекторы (см. variants).
  *
- * Управляется снаружи (controlled) через `checked` + `onChange`. Если
- * `checked` не задан — компонент держит своё внутреннее состояние, опираясь
- * на `defaultChecked` (uncontrolled).
+ * Поддерживает оба режима:
+ * - controlled — `checked` + `onChange`;
+ * - uncontrolled — `defaultChecked`, состояние держится внутри.
+ *
+ * Все цвета — только из темовых токенов (`bg-primary` / `bg-muted` /
+ * `bg-background` / `border-border`). При переключении темы поведение
+ * визуально остаётся консистентным.
  */
 export const Toggle = (props: IToggleProps) => {
+  const id = createUniqueId();
   const [internal, setInternal] = createSignal(!!props.defaultChecked);
   const isControlled = () => props.checked !== undefined;
   const checked = () => (isControlled() ? !!props.checked : internal());
+  const size = () => props.size ?? 'md';
 
   const toggle = () => {
     if (props.disabled) return;
@@ -22,32 +30,23 @@ export const Toggle = (props: IToggleProps) => {
   };
 
   return (
-    <div class="flex items-center gap-2">
+    <div class="inline-flex items-center gap-2">
       <button
+        id={id}
         type="button"
         role="switch"
         aria-checked={checked()}
         disabled={props.disabled}
         data-checked={checked() ? '' : undefined}
         onClick={toggle}
-        class={`relative inline-flex h-5 w-9 items-center rounded-full border border-white/20 transition-colors disabled:opacity-40 ${
-          checked() ? 'bg-blue-500/70' : 'bg-white/10'
-        } ${props.class ?? ''}`}
+        class={cn(toggleTrackCva({ size: size() }), props.class)}
       >
-        <span
-          class="block h-3.5 w-3.5 rounded-full bg-white shadow-md transition-transform"
-          style={{ transform: checked() ? 'translateX(18px)' : 'translateX(2px)' }}
-        />
+        <span class={toggleThumbCva({ size: size() })} />
       </button>
       <Show when={props.label}>
-        <button
-          type="button"
-          class="text-sm select-none cursor-pointer"
-          onClick={toggle}
-          disabled={props.disabled}
-        >
+        <label for={id} class={toggleLabelCva({ size: size() })}>
           {props.label}
-        </button>
+        </label>
       </Show>
     </div>
   );
