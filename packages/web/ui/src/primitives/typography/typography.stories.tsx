@@ -55,7 +55,9 @@ export const Lead: Story = {
 export const Blockquote: Story = {
   args: { variant: 'blockquote' },
   render: (args) => (
-    <Typography {...args}>"No upward imports, no horizontal imports, stateless Entities."</Typography>
+    <Typography {...args}>
+      "No upward imports, no horizontal imports, stateless Entities."
+    </Typography>
   ),
 };
 

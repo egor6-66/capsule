@@ -111,7 +111,11 @@ export interface IRemoteResponse<T = unknown> {
  */
 export interface IRemoteHandle {
   send: (event: string, payload?: unknown) => void;
-  request: <T = unknown>(event: string, payload?: unknown, timeoutMs?: number) => Promise<IRemoteResponse<T>>;
+  request: <T = unknown>(
+    event: string,
+    payload?: unknown,
+    timeoutMs?: number,
+  ) => Promise<IRemoteResponse<T>>;
   on: (event: string, cb: (payload?: unknown) => void) => () => void;
   openStandalone: (props?: Record<string, unknown>) => void;
 }
@@ -168,7 +172,12 @@ export interface IRemoteMessage {
 export interface ITransport {
   kind: TransportKind;
   /** Can this transport deliver to the given target? */
-  canReach: (target: { name: string; instanceId?: string; isStandalone: boolean; sameOrigin: boolean }) => boolean;
+  canReach: (target: {
+    name: string;
+    instanceId?: string;
+    isStandalone: boolean;
+    sameOrigin: boolean;
+  }) => boolean;
   send: (msg: IRemoteMessage) => void;
   onMessage: (cb: (msg: IRemoteMessage) => void) => () => void;
   dispose: () => void;

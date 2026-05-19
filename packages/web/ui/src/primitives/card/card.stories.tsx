@@ -30,7 +30,9 @@ export const Default: Story = {
         UI is a Shadow. Logic lives in Controller and Feature; UI is just a typed projection.
       </Card.Content>
       <Card.Footer class="gap-2">
-        <Button variant="ghost" size="sm">Cancel</Button>
+        <Button variant="ghost" size="sm">
+          Cancel
+        </Button>
         <Button size="sm">Confirm</Button>
       </Card.Footer>
     </Card>
@@ -61,16 +63,28 @@ export const Stack: Story = {
   render: () => (
     <div class="flex flex-col gap-3">
       <Card>
-        <Card.Header><Card.Title class="text-sm">Capsules</Card.Title></Card.Header>
-        <Card.Content class="pt-0 text-xs text-muted-foreground">Active workspace capsules — auto-synced.</Card.Content>
+        <Card.Header>
+          <Card.Title class="text-sm">Capsules</Card.Title>
+        </Card.Header>
+        <Card.Content class="pt-0 text-xs text-muted-foreground">
+          Active workspace capsules — auto-synced.
+        </Card.Content>
       </Card>
       <Card>
-        <Card.Header><Card.Title class="text-sm">Open PRs</Card.Title></Card.Header>
-        <Card.Content class="pt-0 text-xs text-muted-foreground">3 ready for review, 1 draft.</Card.Content>
+        <Card.Header>
+          <Card.Title class="text-sm">Open PRs</Card.Title>
+        </Card.Header>
+        <Card.Content class="pt-0 text-xs text-muted-foreground">
+          3 ready for review, 1 draft.
+        </Card.Content>
       </Card>
       <Card>
-        <Card.Header><Card.Title class="text-sm">System health</Card.Title></Card.Header>
-        <Card.Content class="pt-0 text-xs text-muted-foreground">All services nominal.</Card.Content>
+        <Card.Header>
+          <Card.Title class="text-sm">System health</Card.Title>
+        </Card.Header>
+        <Card.Content class="pt-0 text-xs text-muted-foreground">
+          All services nominal.
+        </Card.Content>
       </Card>
     </div>
   ),

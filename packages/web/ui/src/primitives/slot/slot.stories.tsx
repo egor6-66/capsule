@@ -38,11 +38,7 @@ export const AsDiv: Story = {
 export const AsLink: Story = {
   name: 'as <a>',
   render: () => (
-    <Slot
-      as="a"
-      href="https://example.com"
-      class="text-primary underline-offset-4 hover:underline"
-    >
+    <Slot as="a" href="https://example.com" class="text-primary underline-offset-4 hover:underline">
       Rendered as anchor
     </Slot>
   ),

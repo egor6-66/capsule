@@ -32,7 +32,7 @@ export const Default: Story = {};
 export const Email: Story = { args: { type: 'email', placeholder: 'you@example.com' } };
 export const Password: Story = { args: { type: 'password', placeholder: '••••••••' } };
 export const Search: Story = { args: { type: 'search', placeholder: 'Search…' } };
-export const Number: Story = { args: { type: 'number', placeholder: '42' } };
+export const NumberInput: Story = { args: { type: 'number', placeholder: '42' } };
 
 export const Disabled: Story = {
   args: { disabled: true, value: 'Read-only', placeholder: 'Disabled' },

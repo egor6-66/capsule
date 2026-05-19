@@ -1,5 +1,5 @@
 import { cn } from '@capsuletech/web-style';
-import { Show, createSignal, createUniqueId } from 'solid-js';
+import { createSignal, createUniqueId, Show } from 'solid-js';
 import type { IToggleProps } from './interfaces';
 import { toggleLabelCva, toggleThumbCva, toggleTrackCva } from './variants';
 
@@ -44,14 +44,7 @@ export const Toggle = (props: IToggleProps) => {
         <span class={toggleThumbCva({ size: size() })} />
       </button>
       <Show when={props.label}>
-        <label
-          for={id}
-          onClick={(e) => {
-            e.preventDefault();
-            toggle();
-          }}
-          class={toggleLabelCva({ size: size() })}
-        >
+        <label for={id} class={toggleLabelCva({ size: size() })}>
           {props.label}
         </label>
       </Show>
