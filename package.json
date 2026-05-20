@@ -86,7 +86,8 @@
   },
   "pnpm": {
     "overrides": {
-      "solid-js": "1.9.12"
+      "solid-js": "1.9.12",
+      "vite-plugin-dts": "5.0.0"
     }
   }
 }
