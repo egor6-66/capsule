@@ -1,4 +1,15 @@
 @import "tailwindcss";
+
+/*
+ * Inline the @theme mappings so Tailwind's plugin processes them at compile
+ * time. The individual theme files (loaded via import.meta.glob in preview.ts)
+ * bypass the Tailwind plugin when served by Vite, so their @theme inline blocks
+ * are never compiled — utility classes like bg-background / text-destructive
+ * would reference undefined CSS vars without this import.
+ * See _tailwind-theme-mappings.css for the full explanation.
+ */
+@import "./_tailwind-theme-mappings.css";
+
 @import "@capsuletech/web-style/themes";
 
 /* Tailwind utility scan: web-ui's own src/ — Button/Card/etc. */
