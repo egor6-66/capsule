@@ -16,7 +16,10 @@ const config: StorybookConfig = {
   },
   async viteFinal(viteConfig) {
     const { default: tailwind } = await import('@tailwindcss/vite');
-    viteConfig.plugins = [...(viteConfig.plugins ?? []), tailwind()];
+    // Tailwind v4 plugin must be first so it intercepts @import "tailwindcss"
+    // before Vite's own CSS handler; placing it last causes preflight/utilities
+    // to be silently dropped.
+    viteConfig.plugins = [tailwind(), ...(viteConfig.plugins ?? [])];
     return viteConfig;
   },
 };
